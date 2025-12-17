@@ -1,5 +1,3 @@
-#Not finished yet, still in work!
-
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
@@ -48,6 +46,19 @@ with lib;
     LC_TIME = "de_DE.UTF-8";
   };
 
+    # Fonts
+  fonts = {
+    enableDefaultPackages = true;
+    packages = with pkgs; [
+      corefonts
+      atkinson-hyperlegible
+      geist-font
+      nerd-fonts.geist-mono
+     # (callPackage ./monocraft.nix { })
+    ];
+  };
+
+
   # Enable the X11 windowing system.
   # You can disable this if you're only using the Wayland session.
   services.xserver.enable = true;
@@ -67,6 +78,8 @@ with lib;
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
+
+
 
 
   # Enable sound with pipewire.
@@ -131,10 +144,6 @@ bluetooth = {
 hardware.enableAllFirmware = true;
 
  
-
-
-
-
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
@@ -158,20 +167,12 @@ hardware.enableAllFirmware = true;
     packages = with pkgs; [
       kdePackages.kate
       thunderbird
-      zapzap
+      
      
   ];
 };
 
  
-  # Install firefox.
-  programs.firefox.enable = true;
-
-  # Install niri.
-  programs.niri.enable = true;
-
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
 
   # Install openrgb
   services.hardware.openrgb.enable = true;
@@ -182,39 +183,50 @@ hardware.enableAllFirmware = true;
   # List packages installed in system profile. To search, run:
   #$ nix search wget
   environment.systemPackages = with pkgs; [
-  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+  # vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   wget
   pkgs.fastfetch
   kitty
   ninja
   cmake
   git
-  openrgb-with-all-plugins
-  pkgs.vicinae
+  pkgs.vicinae #server start not at boot
   fuzzel
   musikcube
   lutris
+  pkgs.heroic-unwrapped
   zsh
   oh-my-zsh
+  pkgs.python315
+  pkgs.python313Packages.pip
+  pkgs.pipx
   swaybg
   htop
   ranger
+  pkgs.kdePackages.filelight
+  pkgs.libreoffice-qt-fresh
+  pkgs.protonvpn-gui
   qbittorrent
   mpv
+  pkgs.steam
   steam
   steam-run
- protonup-qt
+  protonup-qt
   xorg.libXcursor
-    xorg.libXi
-    xorg.libXinerama
-    xorg.libXScrnSaver
-    libpng
-    libpulseaudio
-    libvorbis
-    stdenv.cc.cc.lib # Provides libstdc++.so.6
-    libkrb5
-    keyutils
-  
+  xorg.libXi
+  xorg.libXinerama
+  xorg.libXScrnSaver
+  libpng
+  libpulseaudio
+  libvorbis
+  stdenv.cc.cc.lib # Provides libstdc++.so.6
+  libkrb5
+  keyutils
+  pkgs.zapzap
+  pkgs.protonmail-desktop
+  signal-desktop
+  pkgs.bluez
+  pkgs.openrgb-with-all-plugins
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -262,7 +274,6 @@ programs.steam = {
   dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
 };
 
-programs.xwayland.enable = true;
 
 services = {  
 
@@ -277,8 +288,79 @@ services = {
 };
 
 
+ programs = {
+    niri.enable = true;
+    xwayland.enable = true;
+    firefox.enable = true;
+    adb.enable = true;
+    gamemode.enable = true;
+    nano = {
+      enable = true;
+      nanorc = "
+        set mouse
+        set autoindent
+        set linenumbers
+        set constantshow
+        set noconvert
+        set preserve
+        set smarthome
+        set tabsize 4
+        set tabstospaces
+        set wordbounds
+        set zap
+        set errorcolor brightwhite,red
+    	set functioncolor green
+    	set keycolor cyan
+    	set numbercolor cyan
+    	set selectedcolor brightwhite,magenta
+    	set statuscolor cyan
+    	set stripecolor ,yellow
+    	set titlecolor brightwhite,blue
+      ";
+      syntaxHighlight = true;
+    };
+    nh = {
+      enable = true;
+      clean = {
+        enable = true;
+        dates = "weekly";
+        extraArgs = "--keep 5 --keep-since 3d";
+      };
+      flake = "/etc/nixos/";
+    };
+    virt-manager = {
+      enable = true;
+      package = pkgs.virt-manager;
+    };
 
+    appimage = {
+      enable = true;
+      binfmt = true;
+    };
+  };
 
+ # Virtualization software
+  virtualisation = {
+    spiceUSBRedirection.enable = true;
+    libvirtd = {
+      enable = true;
+      qemu = {
+        vhostUserPackages = [ pkgs.virtiofsd ];
+        swtpm.enable = true;
+        runAsRoot = true;
+      };
+    };
+  };
+
+# Allow unstable packages.
+nixpkgs.config = {
+  allowUnfree = true;
+  packageOverrides = pkgs: {
+    unstable = import <unstable> {
+      config = config.nixpkgs.config;
+    };
+  };
+};
 
 
 }

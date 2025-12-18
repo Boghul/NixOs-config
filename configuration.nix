@@ -1,3 +1,5 @@
+#not finshed yet, still in work!
+
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
@@ -10,6 +12,8 @@ with lib;
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
+     # ./steam.nix
+     ./flatpak.nix
     ];
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -53,15 +57,15 @@ with lib;
       corefonts
       atkinson-hyperlegible
       geist-font
+      nerd-fonts.fira-code
       nerd-fonts.geist-mono
-     # (callPackage ./monocraft.nix { })
+      source-code-pro
     ];
   };
 
-
   # Enable the X11 windowing system.
   # You can disable this if you're only using the Wayland session.
-  services.xserver.enable = true;
+  # services.xserver.enable = true;
 
   # Enable the KDE Plasma Desktop Environment.
   services.displayManager.sddm.enable = true;
@@ -79,9 +83,6 @@ with lib;
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-
-
-
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
@@ -90,6 +91,7 @@ with lib;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+    wireplumber.enable = true;
 
     # If you want to use JACK applications, uncomment this
     #jack.enable = true;
@@ -143,7 +145,6 @@ bluetooth = {
 };
 hardware.enableAllFirmware = true;
 
- 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
@@ -167,12 +168,8 @@ hardware.enableAllFirmware = true;
     packages = with pkgs; [
       kdePackages.kate
       thunderbird
-      
-     
   ];
 };
-
- 
 
   # Install openrgb
   services.hardware.openrgb.enable = true;
@@ -184,19 +181,44 @@ hardware.enableAllFirmware = true;
   #$ nix search wget
   environment.systemPackages = with pkgs; [
   # vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+  # pkgs.vimPlugins.clever-f-vim
+  # Terminal
   wget
   pkgs.fastfetch
   kitty
   ninja
   cmake
   git
-  pkgs.vicinae #server start not at boot
-  fuzzel
-  musikcube
-  lutris
-  pkgs.heroic-unwrapped
   zsh
   oh-my-zsh
+
+  # Multimedia
+  musikcube
+  mpv
+  lutris
+  #pkgs.heroic
+  #pkgs.heroic-unwrapped
+  #pkgs.steam
+  #steam
+  #steam-run
+  protonup-qt
+  pkgs.protonplus
+  pkgs.pavucontrol
+
+  # Communication
+  #pkgs.zapzap
+  pkgs.wasistlos
+  signal-desktop
+  pkgs.protonmail-desktop
+  pkgs.protonmail-bridge
+
+  # programs
+  pkgs.vicinae #server start not at boot
+  fuzzel
+  pkgs.rofi
+  pkgs.gearlever
+
+  # python
   pkgs.python315
   pkgs.python313Packages.pip
   pkgs.pipx
@@ -205,28 +227,31 @@ hardware.enableAllFirmware = true;
   ranger
   pkgs.kdePackages.filelight
   pkgs.libreoffice-qt-fresh
+
+  # pirate
   pkgs.protonvpn-gui
   qbittorrent
-  mpv
-  pkgs.steam
-  steam
-  steam-run
-  protonup-qt
+
+  # xorg
   xorg.libXcursor
   xorg.libXi
   xorg.libXinerama
   xorg.libXScrnSaver
+
+  # lib
   libpng
   libpulseaudio
   libvorbis
   stdenv.cc.cc.lib # Provides libstdc++.so.6
   libkrb5
-  keyutils
-  pkgs.zapzap
-  pkgs.protonmail-desktop
-  signal-desktop
+
+  # clean up2
+  keyutils  
   pkgs.bluez
   pkgs.openrgb-with-all-plugins
+  pkgs.kdePackages.discover
+  pkgs.wineWowPackages.waylandFull
+  #pkgs.airgeddon
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -272,8 +297,16 @@ programs.steam = {
   enable = true;
   remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
   dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+  localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
 };
 
+
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "steam"
+    "steam-original"
+    "steam-unwrapped"
+    "steam-run"
+  ];
 
 services = {  
 
@@ -285,11 +318,11 @@ services = {
     spice-webdavd.enable = true;
     resolved.enable = true;
 
-};
-
-
+    gnome.gnome-keyring.enable = true;
+    
+ };
  programs = {
-    niri.enable = true;
+    niri.enable = true; # enable niri as window manager
     xwayland.enable = true;
     firefox.enable = true;
     adb.enable = true;

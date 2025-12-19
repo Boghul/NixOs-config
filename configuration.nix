@@ -11,19 +11,37 @@ with lib;
 {
   imports =
     [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
+      #./fuzzel.nix
      # ./steam.nix
-     ./flatpak.nix
+     #./flatpak.nix
+    #./vicinae.nix
     ];
   # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-
+  boot = {
+   loader = {
+  systemd-boot.enable = true;
+  efi.canTouchEfiVariables = true;
+  systemd-boot.configurationLimit = 10; # Show up to 10 generations
+  };
   # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
- 
-  networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+  kernelPackages = pkgs.linuxPackages_latest;
+  kernelParams = [
+      "amdgpu.dc=1"
+      "amd_iommu=on"
+      "acpi_osi=Linux"
+    ];
+    kernelModules = [
+      "kvm-amd"
+      "amdgpu"
+      "tpm_cbr"
+    ];
+    extraModprobeConfig = "options amdgpu ppfeaturemask=0xffffffff\n\n";
+    bootspec = {
+      enableValidation = true;
+    };
+  }; 
+    networking.hostName = "nixos"; # Define your hostname.
+    #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -66,6 +84,7 @@ with lib;
   # Enable the X11 windowing system.
   # You can disable this if you're only using the Wayland session.
   # services.xserver.enable = true;
+  # services.xserver.videoDrivers = [ "amdgpu" ];
 
   # Enable the KDE Plasma Desktop Environment.
   services.displayManager.sddm.enable = true;
@@ -171,6 +190,8 @@ hardware.enableAllFirmware = true;
   ];
 };
 
+
+
   # Install openrgb
   services.hardware.openrgb.enable = true;
 
@@ -182,54 +203,59 @@ hardware.enableAllFirmware = true;
   environment.systemPackages = with pkgs; [
   # vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   # pkgs.vimPlugins.clever-f-vim
+  
   # Terminal
   wget
-  pkgs.fastfetch
+  fastfetch
   kitty
   ninja
   cmake
+  gnumake
+  curl
   git
+  tree
+
+  # zsh
   zsh
   oh-my-zsh
+  zsh-autocomplete
+  zsh-autosuggestions
+  zsh-fast-syntax-highlighting
+  zsh-syntax-highlighting
 
   # Multimedia
   musikcube
   mpv
   lutris
-  #pkgs.heroic
+  pkgs.heroic
   #pkgs.heroic-unwrapped
+  legendary-gl # epic launcher
   #pkgs.steam
   #steam
-  #steam-run
-  protonup-qt
+  steam-run
   pkgs.protonplus
   pkgs.pavucontrol
 
   # Communication
   #pkgs.zapzap
-  pkgs.wasistlos
+  wasistlos
   signal-desktop
   pkgs.protonmail-desktop
   pkgs.protonmail-bridge
 
   # programs
-  pkgs.vicinae #server start not at boot
+  #vicinae #server start not at boot
   fuzzel
-  pkgs.rofi
-  pkgs.gearlever
+  #rofi
+  gearlever
 
   # python
-  pkgs.python315
-  pkgs.python313Packages.pip
-  pkgs.pipx
-  swaybg
-  htop
-  ranger
-  pkgs.kdePackages.filelight
-  pkgs.libreoffice-qt-fresh
-
+  python315
+  python313Packages.pip
+  pipx
+  
   # pirate
-  pkgs.protonvpn-gui
+  protonvpn-gui
   qbittorrent
 
   # xorg
@@ -244,14 +270,84 @@ hardware.enableAllFirmware = true;
   libvorbis
   stdenv.cc.cc.lib # Provides libstdc++.so.6
   libkrb5
+  libjxl
+  libadwaita
 
-  # clean up2
+  # Secureboot
+  sbctl
+
+  # LUKS
+  tpm2-tools
+  tpm2-tss
+  tpm2-abrmd
+
+  # Security keys
+  fido2-manage
+  libfido2
+  gnupg
+
+  # General utilities
+  swaybg
+  home-manager
+  btop
+  ranger
+  kdePackages.filelight
+  libreoffice-qt-fresh
   keyutils  
-  pkgs.bluez
-  pkgs.openrgb-with-all-plugins
-  pkgs.kdePackages.discover
-  pkgs.wineWowPackages.waylandFull
+  bluez
+  openrgb-with-all-plugins
+  kdePackages.discover
+  wineWowPackages.waylandFull
   #pkgs.airgeddon
+  kdePackages.plasma-browser-integration
+  wget
+  tpm-tools
+  tpm2-tools
+  tpm2-tss
+  wayland
+  rar
+  unrar-free
+  bat
+  usbutils
+  tldr
+  ffmpeg
+  imagemagick
+  zip
+  unzip
+  (uutils-coreutils.override { prefix = ""; })
+  nix-prefetch-git
+  nixfmt-rfc-style
+  statix
+  cachix
+  clinfo
+  solaar
+  nettools
+  tealdeer
+  xclip
+  bat
+
+  # AMD
+  amdgpu_top # tool to display AMDGPU usage
+
+  # Graphics
+  mesa
+  mangohud
+  gamescope
+
+  # Virtualization stuff
+  spice-gtk
+  swtpm
+  OVMFFull
+
+  # Drivers
+  dxvk
+  vkd3d-proton 
+
+  # Wine
+  wine
+  winePackages.waylandFull
+  winetricks
+  protonup-qt
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -293,12 +389,14 @@ users.users.xenomorph.useDefaultShell = true;
 programs.zsh.enable = true;
 # enable zsh and oh my zsh
 
+
 programs.steam = {
   enable = true;
   remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
   dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
   localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
 };
+
 
 
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
@@ -319,13 +417,14 @@ services = {
     resolved.enable = true;
 
     gnome.gnome-keyring.enable = true;
-    
+   
  };
  programs = {
     niri.enable = true; # enable niri as window manager
     xwayland.enable = true;
     firefox.enable = true;
     adb.enable = true;
+    gamescope.enable = true;
     gamemode.enable = true;
     nano = {
       enable = true;
@@ -395,5 +494,19 @@ nixpkgs.config = {
   };
 };
 
+# Mount disk
+ fileSystems."/dev/nvme0n1p1" = {
+   device = "/dev/disk/by-uuid/5A157F32-6B48-4FE4-B00D-B194D30AA4B4";
+   fsType = "ext4";
+   options = [ # If you don't have this options attribute, it'll default to "defaults" 
+     # boot options for fstab. Search up fstab mount options you can use
+     "users" # Allows any user to mount and unmount
+    "nofail" # Prevent system from failing if this drive doesn't mount
+     "exec" # Permit execution of binaries and other executable files
+     "noatime"
+   ];
+ };
 
 }
+
+

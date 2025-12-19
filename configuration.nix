@@ -13,18 +13,20 @@ with lib;
     [ # Include the results of the hardware scan.
       #./fuzzel.nix
      # ./steam.nix
-     #./flatpak.nix
-    #./vicinae.nix
+     ./flatpak.nix
+   # ./vicinae.nix
     ];
   # Bootloader.
   boot = {
    loader = {
-  systemd-boot.enable = true;
-  efi.canTouchEfiVariables = true;
-  systemd-boot.configurationLimit = 10; # Show up to 10 generations
+     systemd-boot = {
+     enable = true;
+     configurationLimit = 10; # Show up to 10 generations
+     };
+     efi.canTouchEfiVariables = true;   
   };
   # Use latest kernel.
-  kernelPackages = pkgs.linuxPackages_latest;
+  kernelPackages =  pkgs.linuxPackages_latest;
   kernelParams = [
       "amdgpu.dc=1"
       "amd_iommu=on"
@@ -39,23 +41,37 @@ with lib;
     bootspec = {
       enableValidation = true;
     };
-  }; 
-    networking.hostName = "nixos"; # Define your hostname.
-    #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
+}; 
+ # Network   
+ networking = {
+    hostName = "nixos"; # Define your hostname.
+    networkmanager.enable = true;
+    modemmanager.enable = true;
+    wireguard.enable = true;
+    firewall = {
+   #   allowedTCPPorts = [ ... ];
+   #   allowedUDPPorts = [ ... ];
+      trustedInterfaces = [
+        "enp11s0"
+        "wlp10s0"
+        "proton0"
+      ];
+   # Or disable the firewall altogether.
+   #   enable = false;
+   };
+   #proxy = {
+   # Configure network proxy if necessary
+   # default = "http://user:password@proxy:port/";
+   # noProxy = "127.0.0.1,localhost,internal.domain";};  
+   #};
+   # wireless.enable = true;  # Enables wireless support via wpa_supplicant.      
+};   
 
   # Set your time zone.
   time.timeZone = "Europe/Berlin";
-
+  
   # Select internationalisation properties.
   i18n.defaultLocale = "de_DE.UTF-8";
-
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "de_DE.UTF-8";
     LC_IDENTIFICATION = "de_DE.UTF-8";
@@ -66,7 +82,7 @@ with lib;
     LC_PAPER = "de_DE.UTF-8";
     LC_TELEPHONE = "de_DE.UTF-8";
     LC_TIME = "de_DE.UTF-8";
-  };
+};
 
     # Fonts
   fonts = {
@@ -79,38 +95,61 @@ with lib;
       nerd-fonts.geist-mono
       source-code-pro
     ];
-  };
+};
 
-  # Enable the X11 windowing system.
-  # You can disable this if you're only using the Wayland session.
-  # services.xserver.enable = true;
-  # services.xserver.videoDrivers = [ "amdgpu" ];
-
+services = {  
+    flatpak = {
+      enable = true;
+    };
+    fwupd.enable = true;
+    spice-vdagentd.enable = true;
+    spice-webdavd.enable = true;
+    resolved.enable = true;
+    gnome.gnome-keyring.enable = true;  
+  # Enable CUPS to print documents.
+    printing.enable = true;
   # Enable the KDE Plasma Desktop Environment.
-  services.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
-
+    displayManager = {  
+        sddm = {
+            enable = true;
+            wayland.enable = true;
+            };
+         };
+   # displayManager.sddm.enable = true;
+    desktopManager.plasma6.enable = true;
+   # displayManager.sddm.wayland.enable = true;
   # Configure keymap in X11
-  services.xserver.xkb = {
+    xserver = {
+    xkb = {
     layout = "de";
     variant = "deadacute";
-  };
-
-  # Configure console keymap
-  console.keyMap = "de";
-
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
-
+    };
+    videoDrivers = [ "amdgpu" ];
+    }; 
+  # enable openrgb
+    hardware.openrgb = { 
+        enable = true; 
+        package = pkgs.openrgb-with-all-plugins; 
+        motherboard = "amd";
+        server = { 
+        port = 6742; 
+        }; 
+     };
+  # Gui BluetoothManager
+    blueman.enable = true;
+ 
   # Enable sound with pipewire.
-  services.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    wireplumber.enable = true;
+    pulseaudio.enable = false;
+    pipewire = {
+        enable = true;
+        alsa.enable = true;
+        alsa.support32Bit = true;
+        pulse.enable = true;
+        wireplumber.enable = true;  
+  # Enable touchpad support (enabled default in most desktopManager).
+  # services.xserver.libinput.enable = true;
+    
+ };
 
     # If you want to use JACK applications, uncomment this
     #jack.enable = true;
@@ -121,6 +160,7 @@ with lib;
   };
   # Hardware Configuration #Steam #Controller #OpenGL #fwupd #Bluetooth
   hardware = {
+    enableAllFirmware = true;
     graphics = {
       enable = true;
       enable32Bit = true;
@@ -136,8 +176,8 @@ with lib;
       overdrive.enable = true;
     };
     steam-hardware.enable = true;
-    #xone.enable = true;
-    #xpadneo.enable = true;
+    xone.enable = true;
+    xpadneo.enable = true;
     cpu.amd.updateMicrocode = true;
 
 bluetooth = {
@@ -162,15 +202,44 @@ bluetooth = {
    };
  };
 };
-hardware.enableAllFirmware = true;
 
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
+ # Security
+  security = {
+    rtkit.enable = true;
+    tpm2 = {
+      enable = true;
+      abrmd = {
+        enable = true;
+      };
+      pkcs11 = {
+        enable = true;
+      };
+      tctiEnvironment = {
+        enable = true;
+      };
+    };
+    # superuser
+    doas = {
+      enable = true;
+      extraRules = [
+        {
+          users = [ "xenomorph" ]; # Replace "xenomorph" with your username
+          keepEnv = true;
+          persist = true;
+        }
+      ];
+    };
+    sudo.enable = true;
+  };
 
+  users = {
+  defaultUserShell=pkgs.zsh; 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.xenomorph = {
+  users.xenomorph = {
     isNormalUser = true;
-    description = "Thorsten ";
+    description = "Thorsten";
+    shell = pkgs.zsh; 
+    useDefaultShell = true;
     extraGroups = [ "networkmanager"
 		    "wheel"
 	  	    "audio"
@@ -184,23 +253,17 @@ hardware.enableAllFirmware = true;
        		    "tss"
        		    "immich"
                   ];
-    packages = with pkgs; [
-      kdePackages.kate
-      thunderbird
-  ];
+    packages = with pkgs; [ ];
+   };
 };
 
-
-
-  # Install openrgb
-  services.hardware.openrgb.enable = true;
-
-  # Gui BluetoothManager
-  services.blueman.enable = true;
-
+  environment = {
+    sessionVariables = {
+    AMD_VULKAN_ICD = "RADV";
+};
   # List packages installed in system profile. To search, run:
   #$ nix search wget
-  environment.systemPackages = with pkgs; [
+  systemPackages = with pkgs; [
   # vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   # pkgs.vimPlugins.clever-f-vim
   
@@ -227,26 +290,24 @@ hardware.enableAllFirmware = true;
   musikcube
   mpv
   lutris
-  pkgs.heroic
-  #pkgs.heroic-unwrapped
+  #pkgs.heroic
+  pkgs.heroic-unwrapped
   legendary-gl # epic launcher
-  #pkgs.steam
-  #steam
+  pkgs.steam
   steam-run
   pkgs.protonplus
   pkgs.pavucontrol
 
   # Communication
-  #pkgs.zapzap
   wasistlos
   signal-desktop
-  pkgs.protonmail-desktop
+  #pkgs.protonmail-desktop
   pkgs.protonmail-bridge
+  thunderbird
 
   # programs
   #vicinae #server start not at boot
   fuzzel
-  #rofi
   gearlever
 
   # python
@@ -325,6 +386,7 @@ hardware.enableAllFirmware = true;
   tealdeer
   xclip
   bat
+  kdePackages.kate
 
   # AMD
   amdgpu_top # tool to display AMDGPU usage
@@ -333,7 +395,8 @@ hardware.enableAllFirmware = true;
   mesa
   mangohud
   gamescope
-
+  gamemode
+  
   # Virtualization stuff
   spice-gtk
   swtpm
@@ -349,6 +412,7 @@ hardware.enableAllFirmware = true;
   winetricks
   protonup-qt
   ];
+};
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -357,17 +421,8 @@ hardware.enableAllFirmware = true;
   #   enable = true;
   #   enableSSHSupport = true;
   # };
-
-  # List services that you want to enable:
-
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
@@ -380,45 +435,21 @@ hardware.enableAllFirmware = true;
 # Activate flakes install
 nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-# Shell set up
-# for global user
-users.defaultUserShell=pkgs.zsh; 
-# For a specific user
-users.users.xenomorph.shell = pkgs.zsh; 
-users.users.xenomorph.useDefaultShell = true;
-programs.zsh.enable = true;
-# enable zsh and oh my zsh
-
-
+# Steam
 programs.steam = {
   enable = true;
   remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
   dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
   localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
+  gamescopeSession.enable = true;
 };
-
-
-
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
     "steam"
     "steam-original"
     "steam-unwrapped"
     "steam-run"
-  ];
+];
 
-services = {  
-
-    flatpak = {
-      enable = true;
-    };
-    fwupd.enable = true;
-    spice-vdagentd.enable = true;
-    spice-webdavd.enable = true;
-    resolved.enable = true;
-
-    gnome.gnome-keyring.enable = true;
-   
- };
  programs = {
     niri.enable = true; # enable niri as window manager
     xwayland.enable = true;
@@ -426,9 +457,9 @@ services = {
     adb.enable = true;
     gamescope.enable = true;
     gamemode.enable = true;
-    nano = {
-      enable = true;
-      nanorc = "
+   nano = {
+    enable = true;
+    nanorc = "
         set mouse
         set autoindent
         set linenumbers
@@ -449,9 +480,9 @@ services = {
     	set stripecolor ,yellow
     	set titlecolor brightwhite,blue
       ";
-      syntaxHighlight = true;
+    syntaxHighlight = true;
     };
-    nh = {
+       nh = {
       enable = true;
       clean = {
         enable = true;
@@ -469,6 +500,18 @@ services = {
       enable = true;
       binfmt = true;
     };
+    
+    zsh = {
+      enable = true;
+      autosuggestions.enable = true;
+      syntaxHighlighting = {
+        enable = true;
+        patterns = {"rm -rf *" = "fg=white,bg=red";};
+        styles = {"alias" = "fg=magenta";};
+        highlighters = ["main" "brackets" "pattern"];
+      };
+    };
+
   };
 
  # Virtualization software
@@ -508,5 +551,3 @@ nixpkgs.config = {
  };
 
 }
-
-

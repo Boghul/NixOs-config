@@ -12,35 +12,40 @@ with lib;
   imports =
     [ # Include the results of the hardware scan.
       #./fuzzel.nix
-     # ./steam.nix
-     ./flatpak.nix
-   # ./vicinae.nix
+      #./steam.nix
+      ./flatpak.nix
+      #./vicinae.nix
     ];
   # Bootloader.
   boot = {
+   initrd.availableKernelModules = [
+      "xhci_pci"
+      "usb_storage"
+      "nvme"
+      ];
    loader = {
      systemd-boot = {
-     enable = true;
-     configurationLimit = 10; # Show up to 10 generations
-     };
+        enable = true;
+        configurationLimit = 10; # Show up to 10 generations
+        };
      efi.canTouchEfiVariables = true;   
-  };
+     };
   # Use latest kernel.
   kernelPackages =  pkgs.linuxPackages_latest;
   kernelParams = [
       "amdgpu.dc=1"
       "amd_iommu=on"
       "acpi_osi=Linux"
-    ];
+      ];
     kernelModules = [
       "kvm-amd"
       "amdgpu"
       "tpm_cbr"
-    ];
+      ];
     extraModprobeConfig = "options amdgpu ppfeaturemask=0xffffffff\n\n";
     bootspec = {
       enableValidation = true;
-    };
+      };
 }; 
  # Network   
  networking = {
@@ -51,11 +56,11 @@ with lib;
     firewall = {
    #   allowedTCPPorts = [ ... ];
    #   allowedUDPPorts = [ ... ];
-      trustedInterfaces = [
+       trustedInterfaces = [
         "enp11s0"
         "wlp10s0"
         "proton0"
-      ];
+        ];
    # Or disable the firewall altogether.
    #   enable = false;
    };
@@ -63,7 +68,7 @@ with lib;
    # Configure network proxy if necessary
    # default = "http://user:password@proxy:port/";
    # noProxy = "127.0.0.1,localhost,internal.domain";};  
-   #};
+   # };
    # wireless.enable = true;  # Enables wireless support via wpa_supplicant.      
 };   
 
@@ -94,13 +99,13 @@ with lib;
       nerd-fonts.fira-code
       nerd-fonts.geist-mono
       source-code-pro
-    ];
+      ];
 };
 
 services = {  
     flatpak = {
       enable = true;
-    };
+      };
     fwupd.enable = true;
     spice-vdagentd.enable = true;
     spice-webdavd.enable = true;
@@ -120,11 +125,11 @@ services = {
    # displayManager.sddm.wayland.enable = true;
   # Configure keymap in X11
     xserver = {
-    xkb = {
-    layout = "de";
-    variant = "deadacute";
-    };
-    videoDrivers = [ "amdgpu" ];
+        xkb = {
+            layout = "de";
+            variant = "deadacute";
+            };
+            videoDrivers = [ "amdgpu" ];
     }; 
   # enable openrgb
     hardware.openrgb = { 
@@ -132,9 +137,9 @@ services = {
         package = pkgs.openrgb-with-all-plugins; 
         motherboard = "amd";
         server = { 
-        port = 6742; 
-        }; 
-     };
+            port = 6742; 
+            }; 
+        };
   # Gui BluetoothManager
     blueman.enable = true;
  
@@ -148,7 +153,10 @@ services = {
         wireplumber.enable = true;  
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
-    
+  # t o find the controller and product ID of a device usbutils might be useful 
+  #udev.extraRules = ''
+  #  SUBSYSTEM=="input", ATTRS{idVendor}=="2dc8", ATTRS{idProduct}=="3106", MODE="0660", GROUP="input"
+  #'';  
  };
 
     # If you want to use JACK applications, uncomment this
@@ -167,14 +175,14 @@ services = {
       extraPackages = with pkgs; [
         rocmPackages.clr.icd # OpenCL
         libva # VA-API
-      ];
+        ];
       extraPackages32 = [ ];
     };
     amdgpu = {
       initrd.enable = true;
       opencl.enable = true;
       overdrive.enable = true;
-    };
+      };
     steam-hardware.enable = true;
     xone.enable = true;
     xpadneo.enable = true;
@@ -251,8 +259,7 @@ bluetooth = {
        		    "input"
        		    "plugdev"
        		    "tss"
-       		    "immich"
-                  ];
+       		      ];
     packages = with pkgs; [ ];
    };
 };
@@ -277,6 +284,7 @@ bluetooth = {
   curl
   git
   tree
+  gnugrep
 
   # zsh
   zsh
@@ -291,7 +299,7 @@ bluetooth = {
   mpv
   lutris
   #pkgs.heroic
-  pkgs.heroic-unwrapped
+  #pkgs.heroic-unwrapped
   legendary-gl # epic launcher
   pkgs.steam
   steam-run
@@ -387,6 +395,18 @@ bluetooth = {
   xclip
   bat
   kdePackages.kate
+  xhost
+  xwayland-satellite
+  (pkgs.wrapOBS {
+    plugins = with pkgs.obs-studio-plugins; [
+      wlrobs
+      obs-backgroundremoval
+      obs-pipewire-audio-capture
+      obs-vaapi #optional AMD hardware acceleration
+      obs-gstreamer
+      obs-vkcapture
+    ];
+  })
 
   # AMD
   amdgpu_top # tool to display AMDGPU usage
@@ -442,22 +462,56 @@ programs.steam = {
   dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
   localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
   gamescopeSession.enable = true;
+  extraCompatPackages = with pkgs; [
+  proton-ge-bin
+  ];
+  
+  package = pkgs.steam.override {
+  extraPkgs = pkgs': with pkgs'; [
+    xorg.libXcursor
+    xorg.libXi
+    xorg.libXinerama
+    xorg.libXScrnSaver
+    libpng
+    libpulseaudio
+    libvorbis
+    stdenv.cc.cc.lib # Provides libstdc++.so.6
+    libkrb5
+    keyutils
+    SDL2 
+    libjpeg
+    # Add other libraries as needed
+    ];
+  };
 };
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-    "steam"
-    "steam-original"
-    "steam-unwrapped"
-    "steam-run"
-];
+  nixpkgs = {
+    #hostPlatform = "aarch64-linux";
+# Allow unstable & unfree packages.
+    config = {
+        allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+            "steam"
+            "steam-original"
+            "steam-unwrapped"
+            "steam-run"
+            ];
+        allowUnfree = true;
+        packageOverrides = pkgs: {
+            unstable = import <unstable> {
+                config = config.nixpkgs.config;
+                };
+            };
+        };
+};
 
  programs = {
     niri.enable = true; # enable niri as window manager
     xwayland.enable = true;
     firefox.enable = true;
     adb.enable = true;
-    gamescope.enable = true;
+    gamescope.enable = true; 
     gamemode.enable = true;
-   nano = {
+    obs-studio.enable = true;
+    nano = {
     enable = true;
     nanorc = "
         set mouse
@@ -482,7 +536,7 @@ programs.steam = {
       ";
     syntaxHighlight = true;
     };
-       nh = {
+    nh = {
       enable = true;
       clean = {
         enable = true;
@@ -503,6 +557,8 @@ programs.steam = {
     
     zsh = {
       enable = true;
+      enableCompletion = true;
+    enableBashCompletion = true;
       autosuggestions.enable = true;
       syntaxHighlighting = {
         enable = true;
@@ -510,9 +566,15 @@ programs.steam = {
         styles = {"alias" = "fg=magenta";};
         highlighters = ["main" "brackets" "pattern"];
       };
+     setOptions = [
+      "AUTO_CD"
+    ];
+      histSize = 10000;
+    shellAliases = {
+      #...
     };
-
   };
+};
 
  # Virtualization software
   virtualisation = {
@@ -527,16 +589,6 @@ programs.steam = {
     };
   };
 
-# Allow unstable packages.
-nixpkgs.config = {
-  allowUnfree = true;
-  packageOverrides = pkgs: {
-    unstable = import <unstable> {
-      config = config.nixpkgs.config;
-    };
-  };
-};
-
 # Mount disk
  fileSystems."/dev/nvme0n1p1" = {
    device = "/dev/disk/by-uuid/5A157F32-6B48-4FE4-B00D-B194D30AA4B4";
@@ -544,10 +596,12 @@ nixpkgs.config = {
    options = [ # If you don't have this options attribute, it'll default to "defaults" 
      # boot options for fstab. Search up fstab mount options you can use
      "users" # Allows any user to mount and unmount
-    "nofail" # Prevent system from failing if this drive doesn't mount
+     "nofail" # Prevent system from failing if this drive doesn't mount
      "exec" # Permit execution of binaries and other executable files
      "noatime"
    ];
  };
-
+system.autoUpgrade = {
+    enable = true;
+    };
 }

@@ -8,6 +8,7 @@
 
 with lib;
 
+
 {
   imports =
     [ # Include the results of the hardware scan
@@ -22,11 +23,20 @@ with lib;
       "nvme"
       ];
    loader = {
-     systemd-boot = {
+     #systemd-boot = {
+     #  enable = false;
+     #  configurationLimit = 10; # Show up to 10 generations
+     #   };
+     limine = {
         enable = true;
-        configurationLimit = 10; # Show up to 10 generations
-        };
-     efi.canTouchEfiVariables = true;   
+        efiSupport = true;  # For UEFI systems
+        biosSupport = true; # For BIOS systems
+        secureBoot.enable = true;
+        maxGenerations = 16;
+        validateChecksums = true;
+       # biosDevice = "/dev/nvme0n1";
+      };
+      efi.canTouchEfiVariables = true;
      };
   # Use latest kernel.
   kernelPackages =  pkgs.linuxPackages_latest;
@@ -49,7 +59,11 @@ with lib;
  # Network   
  networking = {
     hostName = "nixos"; # Define your hostname.
-    networkmanager.enable = true;
+    networkmanager = {
+      enable = true;
+      ethernet.macAddress = "random";
+      #wifi.macAddress = "random";
+      };
     modemmanager.enable = true;
     wireguard.enable = true;
     firewall = {
@@ -99,6 +113,7 @@ with lib;
       nerd-fonts.geist-mono
       source-code-pro
       ];
+      fontconfig.defaultFonts.serif = [ "source-code-pro" ];
 };
 
 services = {  
@@ -113,6 +128,7 @@ services = {
     clamav = {
         daemon.enable = true;
         updater.enable = true;
+        scanner.interval = "04:00:00";
         };
     protonmail-bridge = {
         enable = true;
@@ -257,6 +273,7 @@ services = {
  # Security
   security = {
     polkit.enable = true;
+    pam.services.login.enableGnomeKeyring = true;
     protectKernelImage = true;
     forcePageTableIsolation = true;
     rtkit.enable = true;
@@ -302,7 +319,8 @@ services = {
        		    "sysctlgroup"
        		    "libvirtd"
        		    "kvm"
-       		    "input"       		    
+       		    "input"
+       		    "tss"
        		      ];
     packages = with pkgs; [ ];
    };
@@ -325,6 +343,9 @@ services = {
   # vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   # pkgs.vimPlugins.clever-f-vim
   
+  # Bootloader
+  limine
+
   # Terminal
   wget
   fastfetch
@@ -336,6 +357,7 @@ services = {
   git
   tree
   gnugrep
+  asciiquarium
   
   # zsh
   zsh
@@ -349,8 +371,6 @@ services = {
   musikcube
   mpv
   lutris
-  #pkgs.heroic
-  #pkgs.heroic-unwrapped
   legendary-gl # epic launcher
   pkgs.steam
   steam-run
@@ -360,7 +380,7 @@ services = {
   # Communication
   wasistlos
   signal-desktop
-  #pkgs.protonmail-desktop
+  pkgs.protonmail-desktop
   protonmail-bridge
   thunderbird
 
@@ -408,6 +428,7 @@ services = {
   libfido2
   gnupg
   clamav
+  gnome-keyring
 
   # General utilities
   swaybg
@@ -424,6 +445,7 @@ services = {
   #pkgs.airgeddon
   kdePackages.plasma-browser-integration
   wget
+  gparted
   tpm-tools
   tpm2-tools
   tpm2-tss
@@ -456,6 +478,8 @@ services = {
   xwayland-satellite
   xcb-util-cursor
   clang
+  seahorse
+  nixos-generators
   (pkgs.wrapOBS {
     plugins = with pkgs.obs-studio-plugins; [
       wlrobs
@@ -529,7 +553,7 @@ programs.steam = {
   extraCompatPackages = with pkgs; [
   proton-ge-bin
   ];
-  
+
   package = pkgs.steam.override {
   extraPkgs = pkgs': with pkgs'; [
     xorg.libXcursor
@@ -666,6 +690,11 @@ programs.steam = {
      "noatime"
    ];
  };
+ #fileSystems."/boot" = {
+  #device = "/dev/disk/by-partuuid/54a46368-4d9f-4efc-9e96-4dd26468ad31";
+  #fsType = "vfat";
+  #options = [ "nofail" ];
+#};
     system.autoUpgrade = {
         enable = true;
         };

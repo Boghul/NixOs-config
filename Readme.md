@@ -22,7 +22,11 @@ This repository houses my personal NixOS configuration, leveraging the power of 
 
 The goal is to provide a single source of truth for my entire operating system, enabling consistent environments across different machines and ensuring easy migration or disaster recovery. Whether you're a fellow NixOS enthusiast looking for inspiration or planning to adopt a declarative workflow, this configuration demonstrates a robust approach to managing a modern Linux system.
 
-Here is a look at my niri environment: picture & video follows
+Here is a look at my niri environment: 
+
+<img width="3840" height="2160" alt="screenshots from 2025-12-21 17-47-59" src="https://github.com/user-attachments/assets/6f8518d1-ca9a-45d9-bdb9-8c4ecd75230f" />
+
+Video follows soon.
 
 ## ✨ Features
 

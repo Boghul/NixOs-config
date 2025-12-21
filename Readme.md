@@ -22,6 +22,8 @@ This repository houses my personal NixOS configuration, leveraging the power of 
 
 The goal is to provide a single source of truth for my entire operating system, enabling consistent environments across different machines and ensuring easy migration or disaster recovery. Whether you're a fellow NixOS enthusiast looking for inspiration or planning to adopt a declarative workflow, this configuration demonstrates a robust approach to managing a modern Linux system.
 
+Here is a look at my niri environment: picture & video follows
+
 ## ✨ Features
 
 -   🎯 **Declarative System Setup**: Manage the entire NixOS system configuration through Nix language, ensuring reproducibility.
@@ -60,8 +62,11 @@ The goal is to provide a single source of truth for my entire operating system, 
 ## 📝 To do
 
 [❌] Fix Steam games won't launch
+
 [❌] Fix Heroic games won't launch
+
 [❌] Fix Lutris games won't launch
+
 [❌] Switch from Swaybg to awww
 
 ## 🚀 Quick Start

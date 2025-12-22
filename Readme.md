@@ -75,7 +75,7 @@ https://github.com/user-attachments/assets/bd14c104-bac4-449d-a65b-d1a31adff35b
 
 [❌] Fix Heroic games won't launch
 
-[✅] Fix Lutris games won't launch / tested with Ferocius  testing a few more in the next weeks
+[✅] Fix Lutris games won't launch / tested with Ferocius,  testing a few more in the next weeks.
 
 [❌] Switch from Swaybg to awww
 
@@ -136,20 +136,6 @@ To apply this configuration to your NixOS system, follow these steps. This setup
 
 4.  **Reboot (if necessary)**
     Some changes (e.g., kernel, bootloader) may require a reboot for full effect.
-
-## 📁 Project Structure
-
-```
-NixOs-config/
-├── configuration.nix         # Main NixOS system-wide configuration
-├── fastfetch/                # Configuration for the fastfetch utility
-├── flake.nix                 # Nix Flake definition, entry point for the configuration
-├── flatpak.nix               # Nix module for Flatpak application integration
-├── fuzzel/                   # Configuration for the fuzzel Wayland application launcher
-├── hardwareconfiguration.nix # Hardware-specific system settings
-├── home.nix                  # Home-Manager configuration for user-specific settings
-└── niri/                     # Configuration for the niri Wayland compositor
-```
 
 ## ⚙️ Configuration
 

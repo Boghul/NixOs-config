@@ -8,12 +8,11 @@
 
 with lib;
 
-
 {
   imports =
     [ # Include the results of the hardware scan
       ./flatpak.nix
-      #./default.nix 
+      #./default.nix
     ];
   # Bootloader.
   boot = {
@@ -23,10 +22,10 @@ with lib;
       "nvme"
       ];
    loader = {
-     #systemd-boot = {
-     #  enable = false;
-     #  configurationLimit = 10; # Show up to 10 generations
-     #   };
+     systemd-boot = {
+       enable = false;
+       configurationLimit = 10; # Show up to 10 generations
+        };
      limine = {
         enable = true;
         efiSupport = true;  # For UEFI systems
@@ -34,7 +33,7 @@ with lib;
         secureBoot.enable = true;
         maxGenerations = 16;
         validateChecksums = true;
-       # biosDevice = "/dev/nvme0n1";
+       # biosDevice = "/boot//EFI/nixos/3qab07nk78l4l5mxkj70a4r52jxan58z-linux-6.18.1-bzImage";
       };
       efi.canTouchEfiVariables = true;
      };
@@ -346,19 +345,27 @@ services = {
   # Bootloader
   limine
 
-  # Terminal
+  # Terminal tools
+  kitty
   wget
   fastfetch
-  kitty
   ninja
   cmake
   gnumake
+  clang
+  clinfo
   curl
   git
   tree
   gnugrep
   asciiquarium
-  
+  btop
+  ranger
+  ffmpeg
+  bat
+  nettools
+  strace
+
   # zsh
   zsh
   oh-my-zsh
@@ -374,20 +381,31 @@ services = {
   legendary-gl # epic launcher
   pkgs.steam
   steam-run
-  pkgs.protonplus
-  pkgs.pavucontrol
+  protonplus
+  pavucontrol
 
   # Communication
   wasistlos
   signal-desktop
-  pkgs.protonmail-desktop
+  protonmail-desktop
   protonmail-bridge
   thunderbird
 
   # programs
   #vicinae #server start not at boot
+  davinci-resolve
   fuzzel
   gearlever
+  gparted
+  kdePackages.filelight
+  kdePackages.discover
+  kdePackages.plasma-browser-integration
+  kdePackages.kate
+  kdePackages.ktexteditor
+  libreoffice-qt-fresh
+  openrgb-with-all-plugins
+  seahorse
+  solaar
 
   # python
   python315
@@ -414,6 +432,33 @@ services = {
   libjxl
   libadwaita
   libxcb
+  libsndfile
+  libtheora
+  libogg
+  libopus
+  libGLU
+  libpcap
+  libao
+  libevdev
+  libgcrypt
+  libxml2
+  libusb1
+  libmpeg2
+  libv4l
+  libjpeg
+  libxkbcommon
+  libass
+  libcdio
+  libjack2
+  libsamplerate
+  libzip
+  libmad
+  libaio
+  libcap
+  libtiff
+  libva
+  libgphoto2
+  libxslt
 
   # Secureboot
   sbctl
@@ -433,30 +478,15 @@ services = {
   # General utilities
   swaybg
   home-manager
-  btop
-  ranger
-  kdePackages.filelight
-  libreoffice-qt-fresh
   keyutils  
   bluez
-  openrgb-with-all-plugins
-  kdePackages.discover
-  wineWowPackages.waylandFull
   #pkgs.airgeddon
-  kdePackages.plasma-browser-integration
-  wget
-  gparted
-  tpm-tools
-  tpm2-tools
-  tpm2-tss
   wayland
   wayland-utils
   rar
   unrar-free
-  bat
   usbutils
   tldr
-  ffmpeg
   imagemagick
   zip
   unzip
@@ -465,21 +495,14 @@ services = {
   nixfmt-rfc-style
   statix
   cachix
-  clinfo
-  solaar
-  nettools
-  strace
   tealdeer
   xclip
-  bat
-  kdePackages.kate
-  kdePackages.ktexteditor
   xhost
   xwayland-satellite
   xcb-util-cursor
-  clang
-  seahorse
   nixos-generators
+
+  # OBS
   (pkgs.wrapOBS {
     plugins = with pkgs.obs-studio-plugins; [
       wlrobs
@@ -488,8 +511,23 @@ services = {
       obs-vaapi #optional AMD hardware acceleration
       obs-gstreamer
       obs-vkcapture
-    ];
+      ];
   })
+
+  # commands that lutris needs
+  xrandr
+  pciutils
+  psmisc
+  mesa-demos
+  p7zip
+  xgamma
+  gettext
+  libstrangle
+  fluidsynth
+  util-linux
+  pkg-config
+  desktop-file-utils
+  appstream-glib
 
   # AMD
   amdgpu_top # tool to display AMDGPU usage
@@ -516,8 +554,24 @@ services = {
   # Wine
   wine
   winePackages.waylandFull
+  wineWowPackages.waylandFull
   winetricks
   protonup-qt
+  protontricks
+  cups
+  lcms2
+  mpg123
+  cairo
+  unixODBC
+  samba4
+  sane-backends
+  openldap
+  ocl-icd
+  util-linux
+  libselinux
+  fribidi
+  pango
+  umu-launcher
   ];
 };
 
@@ -548,11 +602,13 @@ programs.steam = {
   enable = true;
   remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
   dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
-  localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
+  localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local NentworkGame
+  extest.enable = true;
   gamescopeSession.enable = true;
   extraCompatPackages = with pkgs; [
   proton-ge-bin
   ];
+  protontricks.enable = true;
 
   package = pkgs.steam.override {
   extraPkgs = pkgs': with pkgs'; [
@@ -568,6 +624,8 @@ programs.steam = {
     keyutils
     SDL2 
     libjpeg
+    pango
+    harfbuzz
     # Add other libraries as needed
     ];
   };
@@ -600,7 +658,15 @@ programs.steam = {
         enable = true;
         capSysNice = true;
         }; 
-    gamemode.enable = true;
+    gamemode = {
+      enable = true;
+      settings = {
+        gpu = {
+          apply_gpu_optimizations = "accept-responsibility";
+          gpu_device = 0;
+        };
+      };
+    };
     obs-studio.enable = true;
     nano = {
         enable = true;
@@ -663,6 +729,7 @@ programs.steam = {
       histSize = 10000;
       shellAliases = {  };
     };
+
 };
 
  # Virtualization software
@@ -694,7 +761,7 @@ programs.steam = {
   #device = "/dev/disk/by-partuuid/54a46368-4d9f-4efc-9e96-4dd26468ad31";
   #fsType = "vfat";
   #options = [ "nofail" ];
-#};
+ #};
     system.autoUpgrade = {
         enable = true;
         };

@@ -75,7 +75,7 @@ https://github.com/user-attachments/assets/bd14c104-bac4-449d-a65b-d1a31adff35b
 
 [❌] Fix Heroic games won't launch
 
-[❌] Fix Lutris games won't launch
+[✅] Fix Lutris games won't launch / tested with Ferocius  testing a few more in the next weeks
 
 [❌] Switch from Swaybg to awww
 

@@ -40,6 +40,7 @@ https://github.com/user-attachments/assets/bd14c104-bac4-449d-a65b-d1a31adff35b
 -   📦 **Reproducible Environment with Nix Flakes**: Utilizes Nix flakes for precise dependency locking and consistent system builds.
 -   🏡 **Home-Manager Integration**: Declaratively manage user-specific dotfiles, packages, and services (`home.nix`).
 -   💻 **Hardware-Specific Optimizations**: Dedicated configuration for system hardware (`hardwareconfiguration.nix`) for optimal performance.
+-   ⚙️ **Limine Bootloadder**: Secureboot support and customizable.
 -   🌌 **Niri Wayland Compositor**: Custom configurations for a tailored and efficient Wayland desktop experience.
 -   🚀 **Fuzzel Application Launcher**: Personalized settings for a fast and minimalist Wayland application launcher.
 -   📊 **Fastfetch System Information**: Configuration for displaying system information with `fastfetch`.
@@ -73,9 +74,11 @@ https://github.com/user-attachments/assets/bd14c104-bac4-449d-a65b-d1a31adff35b
 
 [❌] Fix Steam games won't launch
 
-[❌] Fix Heroic games won't launch
+[✅] Fix Heroic games won't launch / tested with Borderlands 3
 
-[✅] Fix Lutris games won't launch / tested with Ferocius,  testing a few more in the next weeks.
+[❌] Graphic driver error 18 wit Red Ded Redemption 2
+
+[✅] Fix Lutris games won't launch / tested with Ferocius and Star Wars Jedi Survivor,  testing a few more in the next weeks.
 
 [❌] Switch from Swaybg to awww
 

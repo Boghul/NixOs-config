@@ -16,11 +16,14 @@ with lib;
     ];
   # Bootloader.
   boot = {
-   initrd.availableKernelModules = [
-      "xhci_pci"
-      "usb_storage"
-      "nvme"
-      ];
+   initrd = {
+      availableKernelModules = [
+        "xhci_pci"
+        "usb_storage"
+        "nvme"
+        ];
+   kernelModules = [ "amdgpu" ];
+   };
    loader = {
      systemd-boot = {
        enable = false;
@@ -33,10 +36,20 @@ with lib;
         secureBoot.enable = true;
         maxGenerations = 16;
         validateChecksums = true;
-       # biosDevice = "/boot//EFI/nixos/3qab07nk78l4l5mxkj70a4r52jxan58z-linux-6.18.1-bzImage";
+        biosDevice = "/dev/disk/by-uuid/5A157F32-6B48-4FE4-B00D-B194D30AA4B4";
+        style = {
+          wallpapers = [ /home/xenomorph/Bilder/bootloaderpic/A-Xenomorph-and-a-Yuatja-squaring-off-about-to-fight-in-Dark-Horse-Comics.png ];
+          wallpaperStyle = "stretched"; # example centered, tiled or stretched
+          #backdrop = "7EBAE4"; # used when wallpaperstyle set to centered
+          interface = {
+              branding = "with great power comes great responsibility"; # The title at the top of the screen.
+              brandingColor = 2;
+              };
+          };
       };
       efi.canTouchEfiVariables = true;
-     };
+  };
+
   # Use latest kernel.
   kernelPackages =  pkgs.linuxPackages_latest;
   kernelParams = [
@@ -44,18 +57,21 @@ with lib;
       "amd_iommu=on"
       "acpi_osi=Linux"
       "quiet"
+      "splash"
+      "amdgpu.ppfeaturemask=0xfffd3fff" # for Radeon RX 9070
+      "split_lock_detect=off"
       ];
     kernelModules = [
       "kvm-amd"
       "amdgpu"
       "tpm_cbr"
       ];
-    extraModprobeConfig = "options amdgpu ppfeaturemask=0xffffffff\n\n";
+    extraModprobeConfig = "options amdgpu ppfeaturemask=0xffffffff\n\n"; # enables overclocking features
     bootspec = {
       enableValidation = true;
       };
-}; 
- # Network   
+};
+ # Network
  networking = {
     hostName = "nixos"; # Define your hostname.
     networkmanager = {
@@ -79,14 +95,14 @@ with lib;
    #proxy = {
    # Configure network proxy if necessary
    # default = "http://user:password@proxy:port/";
-   # noProxy = "127.0.0.1,localhost,internal.domain";};  
+   # noProxy = "127.0.0.1,localhost,internal.domain";};
    # };
-   # wireless.enable = true;  # Enables wireless support via wpa_supplicant.      
-};   
+   # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+};
 
   # Set your time zone.
   time.timeZone = "Europe/Berlin";
-  
+
   # Select internationalisation properties.
   i18n.defaultLocale = "de_DE.UTF-8";
   i18n.extraLocaleSettings = {
@@ -115,7 +131,7 @@ with lib;
       fontconfig.defaultFonts.serif = [ "source-code-pro" ];
 };
 
-services = {  
+services = {
     flatpak = {
         enable = true;
         };
@@ -132,11 +148,11 @@ services = {
     protonmail-bridge = {
         enable = true;
         logLevel = "info"; # Options: panic, fatal, error, warn, info, debug
-        };  
+        };
   # Enable CUPS to print documents.
     printing.enable = true;
   # Enable the KDE Plasma Desktop Environment.
-    displayManager = {  
+    displayManager = {
         sddm = {
             enable = true;
             wayland.enable = true;
@@ -153,19 +169,19 @@ services = {
             variant = "deadacute";
             };
             videoDrivers = [ "amdgpu" ];
-    }; 
+    };
   # enable openrgb
-    hardware.openrgb = { 
-        enable = true; 
-        package = pkgs.openrgb-with-all-plugins; 
+    hardware.openrgb = {
+        enable = true;
+        package = pkgs.openrgb-with-all-plugins;
         motherboard = "amd";
-        server = { 
-            port = 6742; 
-            }; 
+        server = {
+            port = 6742;
+            };
         };
   # Gui BluetoothManager
     blueman.enable = true;
- 
+
   # Enable sound with pipewire.
     pulseaudio.enable = false;
     pipewire = {
@@ -173,10 +189,10 @@ services = {
         alsa.enable = true;
         alsa.support32Bit = true;
         pulse.enable = true;
-        wireplumber.enable = true;  
+        wireplumber.enable = true;
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
-  # t o find the controller and product ID of a device usbutils might be useful 
+  # t o find the controller and product ID of a device usbutils might be useful
   #udev.extraRules = ''
   #  SUBSYSTEM=="input", ATTRS{idVendor}=="2dc8", ATTRS{idProduct}=="3106", MODE="0660", GROUP="input"
   #'';
@@ -189,28 +205,28 @@ services = {
     extraArgs = ""; # Extra arguments to pass to solaar on startup
   };
   # Logitech mx master 3s setup
-    udev.extraRules = ''  
-    # Allows non-root users to have raw access to Logitech devices.  
-    # Allowing users to write to the device is potentially dangerous  
-    # because they could perform firmware updates.  
-    KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"    
-    ACTION == "remove", GOTO="solaar_end"  
-    SUBSYSTEM != "hidraw", GOTO="solaar_end"    
-    # USB-connected Logitech receivers and devices  
-    ATTRS{idVendor}=="046d", GOTO="solaar_apply"    
-    # Lenovo nano receiver  
-    ATTRS{idVendor}=="17ef", ATTRS{idProduct}=="6042", GOTO="solaar_apply"    
-    # Bluetooth-connected Logitech devices  
-    KERNELS == "0005:046D:*", GOTO="solaar_apply"    
-    GOTO="solaar_end"    
-    LABEL="solaar_apply"    
-    # Allow any seated user to access the receiver.  
-    # uaccess: modern ACL-enabled udev  
-    TAG+="uaccess"    
-    # Grant members of the "plugdev" group access to receiver (useful for SSH users)  
-    #MODE="0660", GROUP="plugdev"    
-    LABEL="solaar_end"  
-    # vim: ft=udevrules  
+    udev.extraRules = ''
+    # Allows non-root users to have raw access to Logitech devices.
+    # Allowing users to write to the device is potentially dangerous
+    # because they could perform firmware updates.
+    KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"
+    ACTION == "remove", GOTO="solaar_end"
+    SUBSYSTEM != "hidraw", GOTO="solaar_end"
+    # USB-connected Logitech receivers and devices
+    ATTRS{idVendor}=="046d", GOTO="solaar_apply"
+    # Lenovo nano receiver
+    ATTRS{idVendor}=="17ef", ATTRS{idProduct}=="6042", GOTO="solaar_apply"
+    # Bluetooth-connected Logitech devices
+    KERNELS == "0005:046D:*", GOTO="solaar_apply"
+    GOTO="solaar_end"
+    LABEL="solaar_apply"
+    # Allow any seated user to access the receiver.
+    # uaccess: modern ACL-enabled udev
+    TAG+="uaccess"
+    # Grant members of the "plugdev" group access to receiver (useful for SSH users)
+    #MODE="0660", GROUP="plugdev"
+    LABEL="solaar_end"
+    # vim: ft=udevrules
     '';
 
     # If you want to use JACK applications, uncomment this
@@ -220,7 +236,7 @@ services = {
     # no need to redefine it in your config for now)
     #media-session.enable = true;
   };
-  # Hardware Configuration #Steam #Controller #OpenGL #fwupd #Bluetooth
+  # Hardware Configuration #Steam #Controller #OpenGL #fwupd
   hardware = {
     enableAllFirmware = true;
     graphics = {
@@ -232,6 +248,7 @@ services = {
         libva-vdpau-driver
         libvdpau-va-gl
         mesa
+        mesa.opencl
         ];
       extraPackages32 = [ ];
     };
@@ -248,6 +265,7 @@ services = {
     logitech.wireless.enable = true;
     bluetooth = {
         enable = true;
+        package = pkgs.bluez;
         powerOnBoot = true;
         settings = {
             General = {
@@ -303,12 +321,12 @@ services = {
   };
 
   users = {
-  defaultUserShell=pkgs.zsh; 
+  defaultUserShell=pkgs.zsh;
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.xenomorph = {
     isNormalUser = true;
     description = "Thorsten";
-    shell = pkgs.zsh; 
+    shell = pkgs.zsh;
     useDefaultShell = true;
     extraGroups = [ "networkmanager"
 		    "wheel"
@@ -341,7 +359,7 @@ services = {
   systemPackages = with pkgs; [
   # vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
   # pkgs.vimPlugins.clever-f-vim
-  
+
   # Bootloader
   limine
 
@@ -393,25 +411,28 @@ services = {
 
   # programs
   #vicinae #server start not at boot
-  davinci-resolve
   fuzzel
   gearlever
-  gparted
-  kdePackages.filelight
-  kdePackages.discover
-  kdePackages.plasma-browser-integration
-  kdePackages.kate
-  kdePackages.ktexteditor
   libreoffice-qt-fresh
   openrgb-with-all-plugins
   seahorse
   solaar
 
+  # kde pkgs
+  kdePackages.filelight
+  kdePackages.discover
+  kdePackages.plasma-browser-integration
+  kdePackages.kate
+  kdePackages.ktexteditor
+  kdePackages.breeze-gtk
+  kdePackages.breeze-icons
+  kdePackages.partitionmanager
+
   # python
   python315
   python313Packages.pip
   pipx
-  
+
   # pirate
   protonvpn-gui
   qbittorrent
@@ -478,8 +499,9 @@ services = {
   # General utilities
   swaybg
   home-manager
-  keyutils  
+  keyutils
   bluez
+  dconf
   #pkgs.airgeddon
   wayland
   wayland-utils
@@ -501,6 +523,7 @@ services = {
   xwayland-satellite
   xcb-util-cursor
   nixos-generators
+  #mesa.opencl
 
   # OBS
   (pkgs.wrapOBS {
@@ -541,7 +564,8 @@ services = {
   vulkan-loader
   vulkan-validation-layers
   vulkan-extension-layer
-  
+  opencl-headers
+
   # Virtualization stuff
   spice-gtk
   swtpm
@@ -549,7 +573,7 @@ services = {
 
   # Drivers
   dxvk
-  vkd3d-proton 
+  vkd3d-proton
 
   # Wine
   wine
@@ -594,7 +618,7 @@ services = {
   system.stateVersion = "25.11"; # Did you read the comment?
 
 nix = {
-    settings.experimental-features = [ "nix-command" "flakes" ];    
+    settings.experimental-features = [ "nix-command" "flakes" ];
 };
 
 # Steam
@@ -622,7 +646,7 @@ programs.steam = {
     stdenv.cc.cc.lib # Provides libstdc++.so.6
     libkrb5
     keyutils
-    SDL2 
+    SDL2
     libjpeg
     pango
     harfbuzz
@@ -654,10 +678,16 @@ programs.steam = {
     xwayland.enable = true;
     firefox.enable = true;
     adb.enable = true;
+    dconf = {
+      enable = true;
+      profiles.user.databases = [{
+        settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
+        }];
+    };
     gamescope = {
         enable = true;
         capSysNice = true;
-        }; 
+        };
     gamemode = {
       enable = true;
       settings = {
@@ -711,7 +741,7 @@ programs.steam = {
       enable = true;
       binfmt = true;
     };
-    
+
     zsh = {
       enable = true;
       enableCompletion = true;
@@ -727,9 +757,8 @@ programs.steam = {
       "AUTO_CD"
       ];
       histSize = 10000;
-      shellAliases = {  };
-    };
-
+      shellAliases = { };
+      };
 };
 
  # Virtualization software
@@ -749,7 +778,7 @@ programs.steam = {
  fileSystems."/dev/nvme0n1p1" = {
    device = "/dev/disk/by-uuid/5A157F32-6B48-4FE4-B00D-B194D30AA4B4";
    fsType = "ext4";
-   options = [ # If you don't have this options attribute, it'll default to "defaults" 
+   options = [ # If you don't have this options attribute, it'll default to "defaults"
      # boot options for fstab. Search up fstab mount options you can use
      "users" # Allows any user to mount and unmount
      "nofail" # Prevent system from failing if this drive doesn't mount
@@ -765,4 +794,5 @@ programs.steam = {
     system.autoUpgrade = {
         enable = true;
         };
+
 }

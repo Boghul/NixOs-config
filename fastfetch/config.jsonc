@@ -238,7 +238,7 @@
         {
           "type": "packages",
           "key": "{$9}{$1}│ ├ 󰮯 {$10}Packages{$9}│",
-          "format": "{$2}{$7}{$9}{all} = rpm: {rpm}, + flatpak: {flatpak-all} + snap {snap}"
+          "format": "{$2}{$7}{$9}{all} = nix-system: {nix-system} + nix-user: {nix-user} + flatpak: {flatpak-all} "
         },
           //command for calculating the os age
         {

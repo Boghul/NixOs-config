@@ -1,4 +1,4 @@
-#not finshed yet, still in work!
+# #not finshed yet, still in work!
 
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
@@ -32,14 +32,14 @@ with lib;
      limine = {
         enable = true;
         efiSupport = true;  # For UEFI systems
-        biosSupport = true; # For BIOS systems
+        biosSupport = false; # For BIOS systems
         secureBoot.enable = true;
         maxGenerations = 16;
         validateChecksums = true;
-        biosDevice = "/dev/disk/by-uuid/5A157F32-6B48-4FE4-B00D-B194D30AA4B4";
+        #biosDevice = "/dev/disk/by-uuid/5A157F32-6B48-4FE4-B00D-B194D30AA4B4";
         style = {
           wallpapers = [ /home/xenomorph/Bilder/bootloaderpic/A-Xenomorph-and-a-Yuatja-squaring-off-about-to-fight-in-Dark-Horse-Comics.png ];
-          wallpaperStyle = "stretched"; # example centered, tiled or stretched
+          wallpaperStyle = "stretched"; # centered, tiled or stretched
           #backdrop = "7EBAE4"; # used when wallpaperstyle set to centered
           interface = {
               branding = "with great power comes great responsibility"; # The title at the top of the screen.
@@ -58,7 +58,7 @@ with lib;
       "acpi_osi=Linux"
       "quiet"
       "splash"
-      "amdgpu.ppfeaturemask=0xfffd3fff" # for Radeon RX 9070
+      "amdgpu.ppfeaturemask=0xfffd3fff" # for disabling STUTTER_MODE and GFXOFF
       "split_lock_detect=off"
       ];
     kernelModules = [
@@ -158,10 +158,8 @@ services = {
             wayland.enable = true;
             };
          };
-   # displayManager.sddm.enable = true;
-    desktopManager.plasma6.enable = true;
-   # displayManager.sddm.wayland.enable = true;
-  # Configure keymap in X11
+       desktopManager.plasma6.enable = true;
+     # Configure keymap in X11
     xserver = {
         displayManager.startx.enable = true;
         xkb = {
@@ -179,7 +177,7 @@ services = {
             port = 6742;
             };
         };
-  # Gui BluetoothManager
+  # BluetoothManager
     blueman.enable = true;
 
   # Enable sound with pipewire.
@@ -204,6 +202,7 @@ services = {
     batteryIcons = "regular"; # Which battery icons to use (*regular*, symbolic, solaar)
     extraArgs = ""; # Extra arguments to pass to solaar on startup
   };
+
   # Logitech mx master 3s setup
     udev.extraRules = ''
     # Allows non-root users to have raw access to Logitech devices.
@@ -353,6 +352,9 @@ services = {
     PROTON_ENABLE_NVAPI      = "1";
     ENABLE_GAMESCOPE_WSI     = "1";
     STEAM_MULTIPLE_XWAYLANDS = "1";
+    GTK_THEME                = "Adwaita:dark";
+    QT_QPA_PLATFORMTHEME     = "kde";
+    EDITOR                   = "kate";
 };
   # List packages installed in system profile. To search, run:
   #$ nix search wget
@@ -426,7 +428,6 @@ services = {
   kdePackages.ktexteditor
   kdePackages.breeze-gtk
   kdePackages.breeze-icons
-  kdePackages.partitionmanager
 
   # python
   python315
@@ -655,8 +656,8 @@ programs.steam = {
   };
 };
   nixpkgs = {
-    #hostPlatform = "aarch64-linux";
-# Allow unstable & unfree packages.
+    hostPlatform = "x86_64-linux";
+    # Allow unstable & unfree packages.
     config = {
         allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
             "steam"
@@ -757,7 +758,8 @@ programs.steam = {
       "AUTO_CD"
       ];
       histSize = 10000;
-      shellAliases = { };
+      #shellAliases = { };
+      ohMyZsh.theme = "mikeh";
       };
 };
 
@@ -794,5 +796,11 @@ programs.steam = {
     system.autoUpgrade = {
         enable = true;
         };
+
+  qt = {
+    style = "bb10dark";
+    enable= true;
+    #platformTheme = "kde";
+    };
 
 }

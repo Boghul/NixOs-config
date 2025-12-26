@@ -72,15 +72,19 @@ https://github.com/user-attachments/assets/bd14c104-bac4-449d-a65b-d1a31adff35b
 
 ## 📝 To do
 
-[❌] Fix Steam games won't launch
+[❌] Fix Steam games won't launch // why running pirated games are easier than paid steam games :`)
 
-[✅] Fix Heroic games won't launch / tested with Borderlands 3
+[✅] Fix Heroic games won't launch // tested with Borderlands 3
 
 [❌] Graphic driver error 18 wit Red Ded Redemption 2
 
-[✅] Fix Lutris games won't launch / tested with Ferocius and Star Wars Jedi Survivor,  testing a few more in the next weeks.
+[✅] Fix Lutris games won't launch // tested with Ferocius Star Wars Jedi Survivor, Cupheads and Need for Speed Heat // testing a few more in the next weeks.
 
 [❌] Switch from Swaybg to awww
+
+[❌] Implement ewww
+
+[❌] Implement disko
 
 ## 🚀 Quick Start
 

@@ -14,13 +14,18 @@ with lib;
       ./flatpak.nix
       #./default.nix
     ];
-  # Bootloader.
+
+  # Bootloader
   boot = {
    initrd = {
       availableKernelModules = [
         "xhci_pci"
         "usb_storage"
         "nvme"
+        "ext4"
+        "ext3"
+        "btrfs"
+        "vfat"
         ];
    kernelModules = [ "amdgpu" ];
    };
@@ -36,7 +41,7 @@ with lib;
         secureBoot.enable = true;
         maxGenerations = 16;
         validateChecksums = true;
-        #biosDevice = "/dev/disk/by-uuid/5A157F32-6B48-4FE4-B00D-B194D30AA4B4";
+        #biosDevice = "/dev/disk/by-uuid/cc0d4cdd-d718-43a9-bec3-df77c8e0eab4";
         style = {
           wallpapers = [ /home/xenomorph/Bilder/bootloaderpic/A-Xenomorph-and-a-Yuatja-squaring-off-about-to-fight-in-Dark-Horse-Comics.png ];
           wallpaperStyle = "stretched"; # centered, tiled or stretched
@@ -53,6 +58,8 @@ with lib;
   # Use latest kernel.
   kernelPackages =  pkgs.linuxPackages_latest;
   kernelParams = [
+      "radeon.si_support=1"
+      "amdgpu.si_support=0"
       "amdgpu.dc=1"
       "amd_iommu=on"
       "acpi_osi=Linux"
@@ -156,6 +163,15 @@ services = {
         sddm = {
             enable = true;
             wayland.enable = true;
+            theme = "sddm-astronaut-theme";
+            extraPackages = [ pkgs.sddm-astronaut
+                              pkgs.sddm-sugar-dark
+                              pkgs.catppuccin-sddm
+                              pkgs.catppuccin-sddm-corners
+                              pkgs.elegant-sddm
+                              pkgs.sakura
+                              pkgs.where-is-my-sddm-theme
+                            ];
             };
          };
        desktopManager.plasma6.enable = true;
@@ -316,8 +332,11 @@ services = {
         }
       ];
     };
-    sudo.enable = true;
-  };
+    sudo ={
+      enable = true;
+      wheelNeedsPassword = false;
+      };
+    };
 
   users = {
   defaultUserShell=pkgs.zsh;
@@ -365,6 +384,9 @@ services = {
   # Bootloader
   limine
 
+  # sddm theme
+  sddm-astronaut
+
   # Terminal tools
   kitty
   wget
@@ -399,7 +421,8 @@ services = {
   mpv
   lutris
   legendary-gl # epic launcher
-  pkgs.steam
+  steam
+
   steam-run
   protonplus
   pavucontrol
@@ -419,6 +442,8 @@ services = {
   openrgb-with-all-plugins
   seahorse
   solaar
+  gparted
+  eww
 
   # kde pkgs
   kdePackages.filelight
@@ -498,6 +523,8 @@ services = {
   gnome-keyring
 
   # General utilities
+  rustc
+  cargo
   swaybg
   home-manager
   keyutils
@@ -508,6 +535,7 @@ services = {
   wayland-utils
   rar
   unrar-free
+  disko
   usbutils
   tldr
   imagemagick
@@ -597,6 +625,7 @@ services = {
   fribidi
   pango
   umu-launcher
+  devenv
   ];
 };
 
@@ -619,7 +648,11 @@ services = {
   system.stateVersion = "25.11"; # Did you read the comment?
 
 nix = {
-    settings.experimental-features = [ "nix-command" "flakes" ];
+    settings = {
+      experimental-features = [ "nix-command" "flakes" ];
+     # substituters = ["https://nix-gaming.cachix.org"];
+     # trusted-public-keys = ["nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="];
+      };
 };
 
 # Steam
@@ -655,6 +688,9 @@ programs.steam = {
     ];
   };
 };
+
+
+
   nixpkgs = {
     hostPlatform = "x86_64-linux";
     # Allow unstable & unfree packages.
@@ -664,6 +700,7 @@ programs.steam = {
             "steam-original"
             "steam-unwrapped"
             "steam-run"
+            "proton-ge-bin"
             ];
         allowUnfree = true;
         packageOverrides = pkgs: {
@@ -777,8 +814,8 @@ programs.steam = {
   };
 
 # Mount disk
- fileSystems."/dev/nvme0n1p1" = {
-   device = "/dev/disk/by-uuid/5A157F32-6B48-4FE4-B00D-B194D30AA4B4";
+ fileSystems."/" = {
+   device = "/dev/disk/by-uuid/cc0d4cdd-d718-43a9-bec3-df77c8e0eab4";
    fsType = "ext4";
    options = [ # If you don't have this options attribute, it'll default to "defaults"
      # boot options for fstab. Search up fstab mount options you can use
@@ -788,19 +825,25 @@ programs.steam = {
      "noatime"
    ];
  };
- #fileSystems."/boot" = {
-  #device = "/dev/disk/by-partuuid/54a46368-4d9f-4efc-9e96-4dd26468ad31";
-  #fsType = "vfat";
-  #options = [ "nofail" ];
- #};
+ fileSystems."/boot" = {
+  device = "/dev/disk/by-uuid/159D-4E20";
+  fsType = "vfat";
+  options = [ "nofail"
+               "fmask=0077"
+               "dmask=0077"
+               ];
+  };
     system.autoUpgrade = {
         enable = true;
         };
 
+
   qt = {
-    style = "bb10dark";
+    style = "adwaita-dark";
     enable= true;
-    #platformTheme = "kde";
+    platformTheme = "kde";
     };
+
+
 
 }

@@ -14,6 +14,7 @@ with lib;
       ./flatpak.nix
       #./default.nix
       ./zshrc.nix
+      #./security.nix
     ];
 
   # Bootloader
@@ -90,8 +91,8 @@ with lib;
     modemmanager.enable = true;
     wireguard.enable = true;
     firewall = {
-   #   allowedTCPPorts = [ ... ];
-   #   allowedUDPPorts = [ ... ];
+      allowedTCPPorts = [ 22 ];
+      allowedUDPPorts = [ 22 ];
        trustedInterfaces = [
         "enp11s0"
         "wlp10s0"
@@ -164,21 +165,30 @@ services = {
         sddm = {
             enable = true;
             wayland.enable = true;
-            theme = "sddm-astronaut-theme";
+            theme = "sakura-theme"; #sddm-astronaut-theme
             extraPackages = [ pkgs.sddm-astronaut
-                              pkgs.sddm-sugar-dark
-                              pkgs.catppuccin-sddm
-                              pkgs.catppuccin-sddm-corners
-                              pkgs.elegant-sddm
+                           #   pkgs.sddm-sugar-dark
+                           #   pkgs.catppuccin-sddm
+                           #   pkgs.catppuccin-sddm-corners
+                           #   pkgs.elegant-sddm
                               pkgs.sakura
-                              pkgs.where-is-my-sddm-theme
-                            ];
+                           #   pkgs.where-is-my-sddm-theme
+                               ];
             };
          };
        desktopManager.plasma6.enable = true;
      # Configure keymap in X11
     xserver = {
-        displayManager.startx.enable = true;
+        displayManager = {
+          startx.enable = true;
+          lightdm.greeters.gtk = {
+            enable = true;
+            theme = {
+            package = [pkgs.gnome-themes-extra];
+            name = "adwaita-dark";
+            };
+          };
+        };
         xkb = {
             layout = "de";
             variant = "deadacute";
@@ -265,6 +275,9 @@ services = {
         libvdpau-va-gl
         mesa
         mesa.opencl
+        vulkan-loader
+        vulkan-validation-layers
+        vulkan-extension-layer
         ];
       extraPackages32 = [ ];
     };
@@ -310,6 +323,19 @@ services = {
     protectKernelImage = true;
     forcePageTableIsolation = true;
     rtkit.enable = true;
+    # If enabled, pam_wallet will attempt to automatically unlock the user’s default KDE wallet upon login.
+    # If the user has no wallet named “kdewallet”, or the login password does not match their wallet password,
+    # KDE will prompt separately after login.
+  #  pam = {
+   #   services = {
+    #    ${usersettings.Thorsten} = {
+     #     kwallet = {
+      #      enable = true;
+       #     package = pkgs.kdePackages.kwallet-pam;
+        #  };
+       # };
+     # };
+    #};
     tpm2 = {
       enable = true;
       abrmd = {
@@ -348,16 +374,16 @@ services = {
     shell = pkgs.zsh;
     useDefaultShell = true;
     extraGroups = [ "networkmanager"
-		    "wheel"
-	  	    "audio"
-		    "gamemode"
-       		    "cpugovctl"
-       		    "sysctlgroup"
-       		    "libvirtd"
-       		    "kvm"
-       		    "input"
-       		    "tss"
-       		      ];
+                    "wheel"
+                    "audio"
+                    "gamemode"
+                    "cpugovctl"
+                    "sysctlgroup"
+                    "libvirtd"
+                    "kvm"
+                    "input"
+                    "tss"
+                    ];
     packages = with pkgs; [ ];
    };
 };
@@ -365,6 +391,7 @@ services = {
   environment = {
     sessionVariables = {
     AMD_VULKAN_ICD           = "RADV";
+    XDG_CURRENT_DESKTOP      = "niri";
     PROTON_USE_NTSYNC        = "1";
     ENABLE_HDR_WSI           = "1";
     DXVK_HDR                 = "1";
@@ -387,6 +414,11 @@ services = {
 
   # sddm theme
   sddm-astronaut
+  pkgs.catppuccin-sddm
+  pkgs.catppuccin-sddm-corners
+  pkgs.elegant-sddm
+  pkgs.sakura
+  pkgs.where-is-my-sddm-theme
 
   # Terminal tools
   kitty
@@ -431,7 +463,7 @@ services = {
   wasistlos
   signal-desktop
   protonmail-desktop
-  protonmail-bridge
+  #protonmail-bridge
   thunderbird
 
   # programs
@@ -444,6 +476,7 @@ services = {
   solaar
   gparted
   eww
+  kdePackages.spectacle
 
   # kde pkgs
   kdePackages.filelight
@@ -453,6 +486,7 @@ services = {
   kdePackages.ktexteditor
   kdePackages.breeze-gtk
   kdePackages.breeze-icons
+  kdePackages.kwallet-pam
 
   # python
   python315
@@ -626,6 +660,10 @@ services = {
   pango
   umu-launcher
   devenv
+  adwaita-qt
+  adwaita-qt6
+  adwaita-fonts
+  adwaita-icon-theme
   ];
 };
 
@@ -634,17 +672,16 @@ services = {
   # programs.mtr.enable = true;
    programs.gnupg.agent = {
      enable = true;
-  #   enableSSHSupport = true;
+     enableSSHSupport = true;
    };
   # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+   services.openssh.enable = true;
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  # This value determines the NixOS release for stateful data
+  # I told you, homeboy (You can't touch this)
+  # Yeah, that's how we livin' and ya know (You can't touch this)
+  # Look in my eyes, man (You can't touch this)
+  # Yo, let me bust the funky lyrics (You can't touch this)
   system.stateVersion = "25.11"; # Did you read the comment?
 
 nix = {
@@ -689,8 +726,6 @@ programs.steam = {
   };
 };
 
-
-
   nixpkgs = {
     hostPlatform = "x86_64-linux";
     # Allow unstable & unfree packages.
@@ -721,7 +756,7 @@ programs.steam = {
       profiles.user.databases = [{
         settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
         }];
-    };
+     };
     gamescope = {
         enable = true;
         capSysNice = true;
@@ -805,14 +840,28 @@ programs.steam = {
      "noatime"
    ];
  };
+  fileSystems."/mnt/dev/sdb2" = {
+  device = "/dev/disk/by-uuid/0xc621846d";
+  fsType = "ext4";
+   options =  [ # If you don't have this options attribute, it'll default to "defaults"
+     # boot options for fstab. Search up fstab mount options you can use
+     "users" # Allows any user to mount and unmount
+     "nofail" # Prevent system from failing if this drive doesn't mount
+     "exec" # Permit execution of binaries and other executable files
+     "noatime"
+     "rw"
+     "user"
+   ];
+ };
  fileSystems."/boot" = {
   device = "/dev/disk/by-uuid/159D-4E20";
   fsType = "vfat";
-  options = [ "nofail"
+  options = [  "nofail"
                "fmask=0077"
                "dmask=0077"
                ];
   };
+
     system.autoUpgrade = {
         enable = true;
          dates = "02:00";  # Set the time for upgrades
@@ -823,6 +872,7 @@ programs.steam = {
   qt = {
     style = "adwaita-dark";
     enable= true;
-    platformTheme = "kde";
+    platformTheme = "kde"; # qt5ct, gnome <- alternative
+
     };
 }

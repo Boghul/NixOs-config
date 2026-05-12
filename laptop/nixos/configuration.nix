@@ -1,0 +1,1159 @@
+# #not finshed yet, still in work!
+
+# Edit this configuration file to define what should be installed on
+# your system.  Help is available in the configuration.nix(5) man page
+# and in the NixOS manual (accessible by running ‘nixos-help’).
+
+{ config, pkgs, lib,  ... }:
+
+with lib;
+
+let
+  glyph = pkgs.elegant-sddm.override {
+    themeConfig.General.background = "${/root/repos/glyph-sddm/assets/images/cyberlogin.gif}";
+    };
+in
+
+
+{
+  imports =
+    [
+      #./flatpak.nix
+      #./default.nix
+      #./shell.nix
+      ./zshrc.nix
+      #./security.nix
+       ./hardware-configuration.nix
+      #./sddm2-theme.nix
+
+    ];
+
+  # Bootloader
+  boot = {
+   initrd = {
+      network.enable = true;
+      };
+   plymouth = {
+      enable = true;
+      theme = "arasaka";
+      themePackages = with pkgs; [
+        pkgs.arasaka-plymouth
+        # By default we would install all themes
+        #(adi1090x-plymouth-themes.override {
+        #  selected_themes = [ "rings" ];
+        #  })
+      ];
+    };
+
+
+      #availableKernelModules = [
+      kernelModules = [
+        "sd_mod"
+    	"ahci"
+	    "uas"
+        "xhci_pci"
+	    "ehci_pci"
+	    "sdhci_pci"
+	    "rtsx_pci_sdmmc"
+        "usb_storage"
+    	"usbhid"
+        "nvme"
+        "ext4"
+        "ext3"
+        "btrfs"
+        "vfat"
+        "kvm-intel" #intel driver
+        "coretemp"  #temps for intel
+        "rtw89" #driver for wifi card laptop
+        ];
+   # supportedFilesystems = [ "ntfs" "fat32" "ext4" "btrfs" ];
+   #kernelModules = [ "amdgpu" ];
+    #kernelModules = [ "kvm-intel" "coretemp" ];
+
+   loader = {
+     systemd-boot = {
+       enable = false;
+       configurationLimit = 10; # Show up to 10 generations
+        };
+     limine = {
+        enable = true;
+        efiSupport = true;  # For UEFI systems
+        biosSupport = false; # For BIOS systems
+        secureBoot.enable = false;
+        maxGenerations = 16;
+        validateChecksums = true;
+        #biosDevice = "/dev/disk/by-uuid/cc0d4cdd-d718-43a9-bec3-df77c8e0eab4";
+        style = {
+          wallpapers = [ /root/Bilder/background.png ];
+          wallpaperStyle = "stretched"; # centered, tiled or stretched
+          #backdrop = "7EBAE4"; # used when wallpaperstyle set to centered
+          interface = {
+              helpHidden = true;
+              #branding = "....with great power comes great responsibility"; # The title at the top of the screen.
+              brandingColor = "red";
+              resolution = "2560x1600";
+              #offsetX = "0";
+              #offsetY = "4";
+              };
+          };
+      };
+      efi.canTouchEfiVariables = true;
+      #loader.timeout = 0;
+  };
+
+  # Use latest kernel.
+  kernelPackages =  pkgs.linuxPackages_latest;
+  kernelParams = [
+     #for AMD
+     # "radeon.si_support=1"
+     # "amdgpu.si_support=0"
+     # "amdgpu.dc=1"
+     # "amd_iommu=on"
+     # "amdgpu.ppfeaturemask=0xfffd3fff" # for disabling STUTTER_MODE and GFXOFF
+     #for nvidia
+      "nvidia_drm.modeset=1"
+      "nvidia_drm.fbdev=1"
+     #for both
+      "acpi_osi=Linux"
+      "quiet"
+      "splash"
+      "udev.log_level=3"
+      "rudev.log_level=3"
+      "split_lock_detect=off"
+      "systemd.show_status=auto"
+      ];
+    #kernelModules = [
+     #for AMD
+      #"kvm-amd"
+      #"amdgpu"
+      #"tpm_cbr"
+      #for Nvidia
+     # ];
+   # extraModprobeConfig = "options amdgpu ppfeaturemask=0xffffffff\n\n"; # enables overclocking features
+    bootspec = {
+      enableValidation = true;
+      };
+};
+ # Network
+ networking = {
+    dhcpcd.enable = true;
+    hostName = "nixos"; # Define your hostname.
+    networkmanager = {
+      enable = true;
+      ethernet.macAddress = "random";
+      wifi.backend = "iwd";
+      wifi.macAddress = "random";
+      };
+    wireless = {
+      #networks.Vodafone-AC65.ssid = {
+      #  psk = "hDmacdN4H7FgnU8e";
+      #  };
+      iwd = {
+        enable = true;
+        settings = {
+          Network = {
+            EnableIPv4 = true;
+            EnableIPv6 = true;
+            };
+          Settings = {
+            AutoConnect = true;
+            };
+          };
+        };
+      };
+    modemmanager.enable = true;
+    wireguard.enable = true;
+    firewall = {
+      enable = true;
+    #  allowedTCPPorts = [ 22 ];
+    #  allowedUDPPorts = [ 22 ];
+       trustedInterfaces = [
+    #    "enp11s0" #myPC
+    #    "wlp10s0" #myPC
+    #    "proton0" #myPC
+
+         "wlan0" #myLaptop
+        ];
+   # Or disable the firewall altogether.
+   #   enable = false;
+   };
+   #proxy = {
+   # Configure network proxy if necessary
+   # default = "http://user:password@proxy:port/";
+   # noProxy = "127.0.0.1,localhost,internal.domain";};
+   # };
+   # wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+};
+
+  # Set your time zone.
+  time.timeZone = "Europe/Berlin";
+
+  # Select internationalisation properties.
+  i18n.defaultLocale = "de_DE.UTF-8";
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "de_DE.UTF-8";
+    LC_IDENTIFICATION = "de_DE.UTF-8";
+    LC_MEASUREMENT = "de_DE.UTF-8";
+    LC_MONETARY = "de_DE.UTF-8";
+    LC_NAME = "de_DE.UTF-8";
+    LC_NUMERIC = "de_DE.UTF-8";
+    LC_PAPER = "de_DE.UTF-8";
+    LC_TELEPHONE = "de_DE.UTF-8";
+    LC_TIME = "de_DE.UTF-8";
+};
+
+   console.keyMap = "de";
+
+    # Fonts
+  fonts = {
+    enableDefaultPackages = true;
+    packages = with pkgs; [
+      corefonts
+      atkinson-hyperlegible
+      geist-font
+      nerd-fonts.fira-code
+      nerd-fonts.geist-mono
+      source-code-pro
+      ];
+      fontconfig.defaultFonts.serif = [ "source-code-pro" ];
+};
+
+services = {
+    dbus.implementation = "broker";
+    fprintd.enable = true;
+    flatpak = {
+        enable = true;
+        };
+    fwupd.enable = true;
+    spice-vdagentd.enable = true;
+    spice-webdavd.enable = true;
+    resolved.enable = true;
+    gnome.gnome-keyring.enable = true;
+    clamav = {
+        daemon.enable = true;
+        updater.enable = true;
+        scanner.interval = "04:00:00";
+        };
+    protonmail-bridge = {
+        enable = true;
+        logLevel = "info"; # Options: panic, fatal, error, warn, info, debug
+        };
+  # Enable CUPS to print documents.
+    printing.enable = true;
+  # Enable the KDE Plasma Desktop Environment.
+    displayManager = {
+        sddm = {
+            enable = true;
+            wayland.enable = true;
+            enableHidpi = true;
+            theme = "Elegant"; #sddm-astronaut-theme Elegant
+            #theme = "${import ./sddm-theme.nix { inherit pkgs; }}";"
+            extraPackages = [ pkgs.sddm-astronaut
+                              pkgs.sddm-sugar-dark
+                           #   pkgs.catppuccin-sddm
+                           #   pkgs.catppuccin-sddm-corners
+                              pkgs.elegant-sddm
+                              pkgs.sakura
+                           #   pkgs.where-is-my-sddm-theme
+                              glyph
+                               ];
+        settings = {
+            Theme = {
+            cursorTheme = "breeze_cursors";
+                          };
+                    };
+            };
+         };
+       desktopManager.plasma6.enable = true;
+     # Configure keymap in X11
+    xserver = {
+        displayManager = {
+          startx.enable = true;
+          lightdm.greeters.gtk = {
+            enable = true;
+            theme = {
+            package = [pkgs.gnome-themes-extra];
+            name = "adwaita-dark";
+            };
+          };
+        };
+        xkb = {
+            layout = "de";
+            variant = "deadacute";
+            };
+           # videoDrivers = [ "amdgpu" ];
+   	    videoDrivers = [ "nvidia" ];
+	 };
+/*  # enable openrgb
+    hardware.openrgb = {
+        enable = true;
+        package = pkgs.openrgb-with-all-plugins;
+        motherboard = "amd";
+        server = {
+            port = 6742;
+            };
+        };
+*/
+
+       # BluetoothManager
+    blueman.enable = true;
+
+  # Enable sound with pipewire.
+    pulseaudio.enable = false;
+    pipewire = {
+        enable = true;
+        alsa.enable = true;
+        alsa.support32Bit = true;
+        pulse.enable = true;
+        wireplumber.enable = true;
+
+ # Enable touchpad support (enabled default in most desktopManager).
+  # services.xserver.libinput.enable = true;
+  # t o find the controller and product ID of a device usbutils might be useful
+  #udev.extraRules = ''
+  #  SUBSYSTEM=="input", ATTRS{idVendor}=="2dc8", ATTRS{idProduct}=="3106", MODE="0660", GROUP="input"
+  #'';
+ };
+
+ /*
+  solaar = {
+    enable = true; # Enable the service
+    package = pkgs.solaar; # The package to use
+    window = "hide"; # Show the window on startup (show, *hide*, only [window only])
+    batteryIcons = "regular"; # Which battery icons to use (*regular*, symbolic, solaar)
+    extraArgs = ""; # Extra arguments to pass to solaar on startup
+  };
+
+  # Logitech mx master 3s setup
+    udev.extraRules = ''
+    # Allows non-root users to have raw access to Logitech devices.
+    # Allowing users to write to the device is potentially dangerous
+    # because they could perform firmware updates.
+    KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"
+    ACTION == "remove", GOTO="solaar_end"
+    SUBSYSTEM != "hidraw", GOTO="solaar_end"
+    # USB-connected Logitech receivers and devices
+    ATTRS{idVendor}=="046d", GOTO="solaar_apply"
+    # Lenovo nano receiver
+    ATTRS{idVendor}=="17ef", ATTRS{idProduct}=="6042", GOTO="solaar_apply"
+    # Bluetooth-connected Logitech devices
+    KERNELS == "0005:046D:*", GOTO="solaar_apply"
+    GOTO="solaar_end"
+    LABEL="solaar_apply"
+    # Allow any seated user to access the receiver.
+    # uaccess: modern ACL-enabled udev
+    TAG+="uaccess"
+    # Grant members of the "plugdev" group access to receiver (useful for SSH users)
+    #MODE="0660", GROUP="plugdev"
+    LABEL="solaar_end"
+    # vim: ft=udevrules
+    '';
+    # If you want to use JACK applications, uncomment this
+    #jack.enable = true;
+
+    # use the example session manager (no others are packaged yet so this is enabled by default,
+    # no need to redefine it in your config for now)
+    #media-session.enable = true;
+*/
+
+  };
+
+  # Hardware Configuration #Steam #Controller #OpenGL #fwupd
+  hardware = {
+    enableAllFirmware = true;
+    graphics = {
+      enable = true;
+      enable32Bit = true;
+      extraPackages = with pkgs; [
+        #rocmPackages.clr.icd # OpenCL
+        #libva # VA-API
+        #libva-vdpau-driver
+        #libvdpau-va-gl
+        mesa
+        mesa.opencl
+        vulkan-loader
+        vulkan-validation-layers
+        vulkan-extension-layer
+
+        #vgl-gpu-rt
+	intel-media-driver
+	intel-vaapi-driver
+        ];
+      extraPackages32 = [ ];
+    };
+   /* amdgpu = {
+      initrd.enable = true;
+      opencl.enable = true;
+      overdrive.enable = true;
+      };
+   */
+    nvidia = {
+	modesetting.enable = true;
+	powerManagement = {
+		enable = true;
+		finegrained = false;
+		};
+	open = true;
+	nvidiaSettings = true;
+	package = config.boot.kernelPackages.nvidiaPackages.stable;
+	};
+    steam-hardware.enable = true;
+    xone.enable = true;
+    xpadneo.enable = true;
+    #cpu.amd.updateMicrocode = true;
+    cpu.intel.updateMicrocode = true;
+
+    logitech.wireless.enable = true;
+    bluetooth = {
+        enable = true;
+        package = pkgs.bluez;
+        powerOnBoot = true;
+        settings = {
+            General = {
+                # Shows battery charge of connected devices on supported
+                #Bluetooth adapters. Defaults to 'false'.
+                Experimental = true;
+                # When enabled other devices can connect faster to us, however
+                # the tradeoff is increased power consumption. Defaults to
+                # 'false'.
+                FastConnectable = true;
+                };
+        Policy = {
+      # Enable all controllers when they are found. This includes
+      # adapters present on start as well as adapters that are plugged
+      # in later on. Defaults to 'true'.
+            AutoEnable = true;
+            };
+        };
+    };
+};
+
+ # Security
+  security = {
+    polkit.enable = true;
+    pam.services.login.enableGnomeKeyring = true;
+    protectKernelImage = true;
+    forcePageTableIsolation = true;
+    rtkit.enable = true;
+    # If enabled, pam_wallet will attempt to automatically unlock the user’s default KDE wallet upon login.
+    # If the user has no wallet named “kdewallet”, or the login password does not match their wallet password,
+    # KDE will prompt separately after login.
+    pam = {
+      services = {
+         login.fprintAuth = false;
+    #    ${usersettings.Thorsten} = {
+     #     kwallet = {
+      #      enable = true;
+       #     package = pkgs.kdePackages.kwallet-pam;
+        #  };
+       # };
+      };
+    };
+    tpm2 = {
+      enable = true;
+      abrmd = {
+        enable = false;
+           };
+      pkcs11 = {
+        enable = true;
+      };
+      tctiEnvironment = {
+        enable = true;
+      };
+    };
+    # superuser
+    doas = {
+      enable = true;
+      extraRules = [
+        {
+          users = [ "t" ]; # Replace "xenomorph" with your username
+          keepEnv = true;
+          persist = true;
+
+        }
+      ];
+    };
+    sudo ={
+      enable = true;
+      wheelNeedsPassword = false;
+      extraRules  = [{
+          users   = ["t"];
+          host    = "ALL";
+          runAs   = "ALL:ALL";
+          groups  = ["wheel"];
+          commands= ["ALL"];
+          }];
+      };
+    };
+
+  users = {
+  defaultUserShell=pkgs.zsh;
+  # Define a user account. Don't forget to set a password with ‘passwd’.
+  users.t = {
+    isNormalUser = true;
+    description = "Thorsten";
+    shell = pkgs.zsh;
+    useDefaultShell = true;
+    extraGroups = [ "networkmanager"
+                    "wheel"
+                    "audio"
+                    "gamemode"
+                    "cpugovctl"
+                    "sysctlgroup"
+                    "libvirtd"
+                    "kvm"
+                    "input"
+                    "tss"
+                    ];
+    packages = with pkgs; [ ];
+   };
+  users.ty = {
+    isNormalUser = true;
+    description = "laptop";
+    shell = pkgs.zsh;
+    useDefaultShell = true;
+    extraGroups = [ "networkmanager"
+                    "wheel"
+                    "audio"
+                    "gamemode"
+                    "cpugovctl"
+                    "sysctlgroup"
+                    "libvirtd"
+                    "kvm"
+                    "input"
+                    "tss"
+                    ];
+    packages = with pkgs; [ ];
+   };
+};
+
+
+  environment = {
+    sessionVariables = {
+   # AMD_VULKAN_ICD           = "RADV";
+    XDG_CURRENT_DESKTOP      = "niri";
+    PROTON_USE_NTSYNC        = "1";
+    ENABLE_HDR_WSI           = "1";
+    DXVK_HDR                 = "1";
+   # PROTON_ENABLE_AMD_AGS    = "1";
+    PROTON_ENABLE_NVAPI      = "1";
+    ENABLE_GAMESCOPE_WSI     = "1";
+    STEAM_MULTIPLE_XWAYLANDS = "1";
+    GTK_THEME                = "Adwaita-dark";
+   # QT_QPA_PLATFORMTHEME     = "wayland";
+    GTK_USE_PORTAL           = "1";
+    EDITOR                   = "neovim";
+
+    NIXOS_OZONE_WL           = "1";
+    #NVIDIA + WAYLAND
+    LIBVA_DRIVER_NAME        = "nvidia";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+};
+  # List packages installed in system profile. To search, run:
+  #$ nix search wget
+  systemPackages = with pkgs; [
+     (pkgs.stdenv.mkDerivation {
+      name = "glyph";
+      src = pkgs.fetchFromGitHub {
+        owner = "xCaptaiN09";
+        repo = "glyph-sddm";
+        rev = "main";
+        sha256 = "sha256-yBMPis6QPBdiCER7ScyFdZAXpp40etNmf5Dq30tun5A="; # Replace with actual hash after first build attempt
+      };
+      installPhase = ''
+        mkdir -p $out/share/sddm/themes/glyph
+        cp -r * $out/share/sddm/themes/glyph/
+      '';
+    })
+    /*
+    (pkgs.stdenv.mkDerivation {
+      name = "802.11ax";
+      src =pkgs.fetchFromGitHub {
+        owner = "lwfinger";
+        repo = "rtw89";
+        rev ="main";
+        sha256 = "sha256-Htu1TihKkUCNWw5LCf+cnGyCQsj0PuijlfAolug2MC8=";
+        };
+      installPhase = ''
+        mkdir -p $out/share/rtw89
+        cp -r * $out/share/rtw89/
+        '';
+        })
+      */
+
+
+  # vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+  # pkgs.vimPlugins.clever-f-vim
+  niri
+  alacritty
+  kitty-themes
+  neovim
+  gtk2
+  gtk3
+  gtk4
+  kdePackages.networkmanager-qt
+  pkgs.kdePackages.qtdeclarative
+  pkgs.kdePackages.qt5compat
+  libsForQt5.qtstyleplugins
+  swaynotificationcenter
+  rofi
+
+
+  # Bootloader
+  limine-full
+  arasaka-plymouth #fetched bootloader animation
+  glyph
+   pkgs.kdePackages.qtsvg
+        pkgs.kdePackages.qtmultimedia
+        pkgs.kdePackages.qtvirtualkeyboard
+
+  # sddm theme
+  sddm-astronaut
+  pkgs.catppuccin-sddm
+  pkgs.catppuccin-sddm-corners
+  pkgs.elegant-sddm
+ /*
+  (pkgs.where-is-my-sddm-theme.override {
+      themeConfig.General = {
+        enable-animation = true;
+        background = “${/root/repos/glyph-sddm/assets/images/cyberlogin.gif}”;
+        backgroundMode = “fill”;
+        blurRadius = 40;
+        showUsersByDefault = true;
+        showSessionsByDefault = true;
+        font = “IosevkaTermSlab”;
+        helpFont = “IosevkaTermSlab”;
+
+
+
+
+      };
+  */
+  pkgs.sakura
+  pkgs.where-is-my-sddm-theme
+    pkgs.libsForQt5.qtquickcontrols2
+    pkgs.libsForQt5.qtsvg
+
+  # Terminal tools
+  kitty
+  wget
+  fastfetch
+  ninja
+  cmake
+  gnumake
+  clinfo
+  curl
+  git
+  tree
+  gnugrep
+  asciiquarium
+  btop
+  ranger
+  ffmpeg
+  bat
+  nettools
+  strace
+  clang
+
+  # zsh
+  zsh
+  oh-my-zsh
+  zsh-autocomplete
+  zsh-autosuggestions
+  zsh-fast-syntax-highlighting
+  zsh-syntax-highlighting
+
+  # Multimedia
+  musikcube
+  mpv
+  #lutris
+  legendary-gl # epic launcher
+  steam
+  steam-run
+  protonplus
+  pavucontrol
+
+  # Communication
+  signal-desktop
+  protonmail-desktop
+  #protonmail-bridge
+  thunderbird
+
+  # programs
+  #vicinae #server start not at boot
+  fuzzel
+  gearlever
+  libreoffice-qt-fresh
+  openrgb-with-all-plugins
+  seahorse
+  solaar
+  gparted
+  eww
+  kdePackages.spectacle
+  networkmanager
+  iwd
+
+  # kde pkgs
+  kdePackages.filelight
+  kdePackages.discover
+  kdePackages.plasma-browser-integration
+  kdePackages.kate
+  kdePackages.ktexteditor
+  kdePackages.breeze-gtk
+  kdePackages.breeze-icons
+  kdePackages.kwallet-pam
+  kdePackages.dolphin
+  kdePackages.plasma-workspace
+
+  # python
+  python315
+  python313Packages.pip
+  pipx
+
+  # pirate
+  proton-vpn
+  qbittorrent
+
+  # xorg
+ # libXcursor
+ # libXi
+ # libXinerama
+ # libXScrnSaver
+ # libxcb
+ # xorg
+ # xauth
+
+  # lib
+  libpng
+  libpulseaudio
+  libvorbis
+  stdenv.cc.cc.lib # Provides libstdc++.so.6
+  libkrb5
+  libjxl
+  libadwaita
+  libxcb
+  libsndfile
+  libtheora
+  libogg
+  libopus
+  libGLU
+  libpcap
+  libao
+  libevdev
+  libgcrypt
+  libxml2
+  libusb1
+  libmpeg2
+  libv4l
+  libjpeg
+  libxkbcommon
+  libass
+  libcdio
+  libjack2
+  libsamplerate
+  libzip
+  libmad
+  libaio
+  libcap
+  libtiff
+  libva
+  libgphoto2
+  libxslt
+
+
+  # Secureboot
+  sbctl
+
+  # LUKS
+  tpm2-tools
+  tpm2-tss
+  tpm2-abrmd
+
+  # Security keys
+  fido2-manage
+  libfido2
+  gnupg
+  clamav
+  gnome-keyring
+
+  # General utilities
+  rustc
+  cargo
+  sway
+  swaybg
+  waybar
+  #home-manager
+  keyutils
+  bluez
+  dconf
+  #pkgs.airgeddon
+  wayland
+  wayland-utils
+  rar
+  unrar-free
+  disko
+  usbutils
+  tldr
+  imagemagick
+  zip
+  unzip
+  (uutils-coreutils.override { prefix = ""; })
+  nix-prefetch-git
+  pkgs.nixfmt
+  statix
+  cachix
+  tealdeer
+  xclip
+  xhost
+  xwayland-satellite
+  xcb-util-cursor
+  nixos-generators
+  #mesa.opencl
+
+  # OBS
+  (pkgs.wrapOBS {
+    plugins = with pkgs.obs-studio-plugins; [
+      wlrobs
+      obs-backgroundremoval
+      obs-pipewire-audio-capture
+      obs-vaapi #optional AMD hardware acceleration
+      obs-gstreamer
+      obs-vkcapture
+      ];
+  })
+
+  # commands that lutris needs
+  xrandr
+  pciutils
+  psmisc
+  mesa-demos
+  p7zip
+  xgamma
+  gettext
+  libstrangle
+  fluidsynth
+  desktop-file-utils
+  appstream-glib
+
+  # AMD
+  #amdgpu_top # tool to display AMDGPU usage
+
+  # Graphics
+  mesa
+  mangohud
+  gamescope
+  gamemode
+ # vulkan-tools
+ # vulkan-loader
+ # vulkan-validation-layers
+ # vulkan-extension-layer
+ # opencl-headers
+
+  # Virtualization stuff
+  spice-gtk
+  swtpm
+  OVMFFull
+
+  # Drivers
+  dxvk
+  vkd3d-proton
+
+  # Wine
+  wine
+  winePackages.waylandFull
+  wineWow64Packages.waylandFull
+  winetricks
+  protonup-qt
+  protontricks
+  cups
+  lcms2
+  mpg123
+  cairo
+ # unixodbc
+  samba4
+  sane-backends
+  openldap
+  ocl-icd
+  util-linux
+  libselinux
+  fribidi
+  pango
+  umu-launcher
+  devenv
+  adwaita-qt
+  adwaita-qt6
+  adwaita-fonts
+  adwaita-icon-theme
+  ];
+};
+
+  # Some programs need SUID wrappers, can be configured further or are
+  # started in user sessions.
+  # programs.mtr.enable = true;
+   programs.gnupg.agent = {
+     enable = true;
+     enableSSHSupport = true;
+   };
+  # Enable the OpenSSH daemon.
+   services.openssh.enable = true;
+
+  # This value determines the NixOS release for stateful data
+  # I told you, homeboy (You can't touch this)
+  # Yeah, that's how we livin' and ya know (You can't touch this)
+  # Look in my eyes, man (You can't touch this)
+  # Yo, let me bust the funky lyrics (You can't touch this)
+  #system.stateVersion = "25.11"; # Did you read the comment?
+
+nix = {
+    settings = {
+      experimental-features = [ "nix-command"
+				 "flakes"
+				 ];
+      auto-optimise-store = true;
+     # substituters = ["https://nix-gaming.cachix.org"];
+     # trusted-public-keys = ["nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="];
+      };
+};
+
+# Steam
+programs.steam = {
+  enable = true;
+  remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
+  dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
+  localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local NentworkGame
+  extest.enable = true;
+  gamescopeSession.enable = true;
+  extraCompatPackages = with pkgs; [
+  proton-ge-bin
+  ];
+  protontricks.enable = true;
+
+  package = pkgs.steam.override {
+  extraPkgs = pkgs': with pkgs'; [
+  #  libXcursor
+  #  libXi
+  #  libXinerama
+  #  libXScrnSaver
+  #  libpng
+    libpulseaudio
+    libvorbis
+    stdenv.cc.cc.lib # Provides libstdc++.so.6
+    libkrb5
+    keyutils
+    SDL2
+    libjpeg
+    pango
+    harfbuzz
+    # Add other libraries as needed
+    ];
+  };
+};
+
+  nixpkgs = {
+    hostPlatform = "x86_64-linux";
+    # Allow unstable & unfree packages.
+    config = {
+        allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+            "steam"
+            "steam-original"
+            "steam-unwrapped"
+            "steam-run"
+            "proton-ge-bin"
+            ];
+        allowUnfree = true;
+        packageOverrides = pkgs: rec {
+            arasaka-plymouth = pkgs.callPackage /root/nixos/package.nix {};
+           # glyphcyber-sddm  = (pkgs.callPackage /etc/nixos/sdmm2-theme.nix {});
+            unstable = import <unstable> {
+                config = config.nixpkgs.config;
+                };
+            };
+        };
+};
+
+ programs = {
+    neovim = {
+      enable =true;
+      configure = {
+        customRC = ''
+        " here your custom VimScript configuration goes!
+        '';
+        customLuaRC = ''
+        -- here your custom Lua configuration goes!
+        '';
+          packages.myVimPackage = with pkgs.vimPlugins; {
+          # loaded on launch
+          start = [ vim-fugitive ];
+          # manually loadable by calling `:packadd $plugin-name`
+          opt = [ ];
+          };
+         };
+        };
+    sway.enable = true;
+    waybar.enable = true;
+    niri.enable = true; # enable niri as window manager
+    xwayland.enable = true;
+    firefox.enable = true;
+   # adb.enable = true; #ersatz raussuchen
+    dconf = {
+      enable = true;
+      profiles.user.databases = [{
+        settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
+        }];
+     };
+    gamescope = {
+        enable = true;
+        capSysNice = true;
+        };
+    gamemode = {
+      enable = true;
+      settings = {
+        gpu = {
+          apply_gpu_optimizations = "accept-responsibility";
+          gpu_device = 0;
+        };
+      };
+    };
+    obs-studio.enable = true;
+    nano = {
+        enable = true;
+        nanorc = "
+            set mouse
+            set autoindent
+            set linenumbers
+            set constantshow
+            set noconvert
+            set preserve
+            set smarthome
+            set tabsize 4
+            set tabstospaces
+            set wordbounds
+            set zap
+            set errorcolor brightwhite,red
+    	    set functioncolor green
+    	    set keycolor cyan
+    	    set numbercolor cyan
+    	    set selectedcolor brightwhite,magenta
+    	    set statuscolor cyan
+    	    set stripecolor ,yellow
+    	    set titlecolor brightwhite,blue
+            ";
+        syntaxHighlight = true;
+        };
+    nh = {
+      enable = true;
+      clean = {
+        enable = true;
+        dates = "weekly";
+        extraArgs = "--keep 5 --keep-since 3d";
+      };
+   #   flake = "/etc/nixos/"; #pc
+      flake = "/root"; #laptop
+    };
+    virt-manager = {
+      enable = true;
+      package = pkgs.virt-manager;
+    };
+
+    appimage = {
+      enable = true;
+      binfmt = true;
+    };
+};
+ # Virtualization software
+  virtualisation = {
+    spiceUSBRedirection.enable = true;
+    libvirtd = {
+      enable = true;
+      qemu = {
+        vhostUserPackages = [ pkgs.virtiofsd ];
+        swtpm.enable = true;
+        runAsRoot = true;
+      };
+    };
+  };
+
+# Mount disk
+ fileSystems."/" = {
+   device = "/dev/disk/by-uuid/d08df428-87a4-427b-8642-41b3a90315af";
+   fsType = "ext4";
+   options = [ # If you don't have this options attribute, it'll default to "defaults"
+     # boot options for fstab. Search up fstab mount options you can use
+     "users" # Allows any user to mount and unmount
+     "nofail" # Prevent system from failing if this drive doesn't mount
+     "exec" # Permit execution of binaries and other executable files
+     "noatime"
+   ];
+ };
+/*  fileSystems."/mnt/dev/sdb2" = {
+  device = "/dev/disk/by-uuid/0xc621846d";
+  fsType = "ext4";
+   options =  [ # If you don't have this options attribute, it'll default to "defaults"
+     # boot options for fstab. Search up fstab mount options you can use
+     "users" # Allows any user to mount and unmount
+     "nofail" # Prevent system from failing if this drive doesn't mount
+     "exec" # Permit execution of binaries and other executable files
+     "noatime"
+     "rw"
+     "user"
+   ];
+ };
+*/
+
+ fileSystems."/boot" = {
+  device = "/dev/disk/by-uuid/35C4-756B";
+  fsType = "vfat";
+  options = [  "nofail"
+               "fmask=0077"
+               "dmask=0077"
+               ];
+  };
+
+    system = {
+      activationScripts = {
+        rfkillUnblockWlan = {
+          text = ''
+            rfkill unblock wlan
+            '';
+            deps = [];
+            };
+           };
+      autoUpgrade = {
+        enable = true;
+         dates = "02:00";  # Set the time for upgrades
+         randomizedDelaySec = "45min";  # Add a delay to avoid simultaneous upgrades
+        };
+      };
+
+
+  qt = {
+    style = "adwaita-dark";
+    enable= true;
+    platformTheme = "gtk2"; # qt5ct, gnome <- alternative
+
+    };
+
+   xdg.portal = {
+	enable = true;
+	extraPortals = [
+		pkgs.xdg-desktop-portal-gtk
+		];
+	};
+
+
+
+
+
+
+
+
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "25.11"; # Did you read the comment?
+
+}
+
